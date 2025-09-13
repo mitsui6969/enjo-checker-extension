@@ -1,0 +1,22 @@
+/* 基本的なリセット */
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ポップアップウィンドウのサイズとスタイル */
+body {
+    width: 300px; /* ポップアップの横幅 */
+    min-height: 150px; /* ポップアップの最小の高さ */
+    background-color: #f7f7f7;
+}
+
+/* Appコンポーネントの基本スタイル */
+#root {
+    padding: 16px;
+    text-align: center;
+}

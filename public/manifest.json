@@ -1,0 +1,24 @@
+{
+    "manifest_version": 3,
+    "name": "炎上チェッカー",
+    "version": "0.0.1",
+    "description": "X(旧Twitter)に投稿する際、そのポストが炎上するリスクをAIがチェックします。",
+    
+    "icons": {
+        "128": "icons/icon128.png"
+    },
+
+    "background": {
+        "service_worker": "background.js"
+    },
+
+    "content_scripts": [
+        {
+        "matches": [
+            "https://twitter.com/*",
+            "https://x.com/home"
+        ],
+        "js": ["content.js"]
+        }
+    ]
+}
