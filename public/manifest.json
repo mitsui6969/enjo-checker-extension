@@ -28,8 +28,7 @@
 
     "permissions": ["scripting"],
     "host_permissions": [
-        "https://hack-u-backend.onrender.com/check/post",
-        "<all_urls>"
+        "https://hack-u-backend.onrender.com/check/post"
     ]
 
 }
