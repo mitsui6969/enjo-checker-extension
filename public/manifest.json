@@ -26,7 +26,6 @@
         "default_popup": "popup.html"
     },
 
-    "permissions": ["scripting"],
     "host_permissions": [
         "https://hack-u-backend.onrender.com/check/post"
     ]

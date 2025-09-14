@@ -2,6 +2,7 @@
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // 受け取ったメッセージの action が 'sendAPIRequest' であることを確認
+    // ここ変える
     if (message.action === 'sendAPIRequest') {
         
         // ポップアップの代わりにAPIリクエストを送信
