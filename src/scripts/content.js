@@ -1,8 +1,7 @@
-// src/scripts/content.js
 console.log('🔥 炎上チェッカー Content Script 読み込み開始');
 console.log('現在のURL:', window.location.href);
 
-const API_BASE_URL = 'https://(デプロイ後に決定)';
+const API_BASE_URL = 'https://hack-u-backend.onrender.com/';
 
 function debounce(func, wait) {
     let timeout;
