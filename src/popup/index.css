@@ -2,21 +2,85 @@
 body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
 /* ポップアップウィンドウのサイズとスタイル */
 body {
-    width: 300px; /* ポップアップの横幅 */
-    min-height: 150px; /* ポップアップの最小の高さ */
     background-color: #f7f7f7;
 }
 
-/* Appコンポーネントの基本スタイル */
-#root {
-    padding: 16px;
+/* コンテナのスタイル（少し横幅長めの正方形） */
+.container {
+    width: 300px; /* 横幅を少し長めに調整 */
+    height: 420px; /* 高さを正方形に設定 */
+    margin: auto;
+    padding: 40px;
     text-align: center;
+    background-color: #fff; /* 背景色を統一 */
+}
+
+/* 絵文字のサイズ調整 */
+.emoji {
+    font-size: 50px; /* 絵文字のサイズ */
+    margin-top: 0px;
+}
+
+/* 高リスク時の絵文字 */
+.emoji.high {
+    color: red; /* 炎上感を強調する赤色 */
+}
+
+/* 中リスク時の絵文字 */
+.emoji.middle {
+    color: orange; /* 警告感を与えるオレンジ色 */
+}
+
+/* 低リスク時の絵文字 */
+.emoji.low {
+    color: green; /* 安全感を出す緑色 */
+}
+
+/* テキストスタイル */
+.text {
+    margin-top: 5px;
+    font-size: 16px;
+    padding: 10px;
+    color: #333;
+}
+
+/* 炎上確率を強調 */
+.text h2 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ff0000; /* 赤色で強調 */
+    margin: 0;
+}
+
+/* メッセージスタイル */
+.message {
+    margin-top: 20px;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    background-color: #fff;
+}
+
+/* ボタンのスタイル */
+button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
 }
