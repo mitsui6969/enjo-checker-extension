@@ -35,14 +35,7 @@ function findAndReplaceButtons() {
                 button.textContent = '🔥 炎上チェック';
                 button.dataset.enjoModified = 'true';
                 
-                button.style.background = 'linear-gradient(135deg, #FF4500, #FF8C00)'; 
-                button.style.color = 'white';
-                button.style.fontWeight = 'bold';
-                button.style.border = 'none';
-                button.style.boxShadow = '0 4px 10px rgba(255, 69, 0, 0.4)';
-                button.style.display = 'flex';
-                button.style.justifyContent = 'center';
-                button.style.alignItems = 'center';
+                button.classList.add('enjo-button');
                 
                 button.style.animation = 'pulse 0.5s ease-in-out';
                 setTimeout(() => {
@@ -93,6 +86,16 @@ if (document.readyState === 'loading') {
 
 const style = document.createElement('style');
 style.textContent = `
+    .enjo-button {
+        background: linear-gradient(135deg, #FF4500, #FF8C00) !important;
+        color: white !important;
+        font-weight: bold !important;
+        border: none !important;
+        box-shadow: 0 4px 10px rgba(255, 69, 0, 0.4) !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
     @keyframes pulse {
         0% { transform: scale(1); }
         50% { transform: scale(1.05); }
