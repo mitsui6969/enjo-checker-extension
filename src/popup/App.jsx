@@ -1,5 +1,16 @@
 import React from 'react';
 
+/**
+ * React functional component rendering the "炎上チェッカー" UI and a test button.
+ *
+ * The component includes an internal async helper that sends a message to the extension
+ * background script via chrome.runtime.sendMessage with action 'sendAPIRequest' and a
+ * provided text payload, then logs the background response or error to the console.
+ *
+ * Clicking the "apiテスト" button triggers the helper with the fixed string "送信テストバカヤロー".
+ *
+ * @returns {JSX.Element} The component UI.
+ */
 function App() {
     
     const sendAPIRequest = async (text) => {
