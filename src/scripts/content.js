@@ -12,6 +12,7 @@ function debounce(func, wait) {
 }
 
 function getPostText() {
+
     const postTextarea = document.querySelector('div[role="textbox"][data-testid="tweetTextarea_0"]');
     if (postTextarea) {
         return postTextarea.textContent;
@@ -23,6 +24,19 @@ function getPostText() {
     }
 
     return '';
+}
+
+function showEnjoResult(resultDiv, data) {
+    resultDiv.innerHTML = `
+        <p><strong>リスクレベル:</strong> ${data.risk_level}</p>
+        <p><strong>AIコメント:</strong> ${data.ai_comment}</p>
+    `;
+    resultDiv.style.display = 'block';
+
+    setTimeout(() => {
+        resultDiv.style.display = 'none';
+        resultDiv.innerHTML = '';
+    }, 5000);
 }
 
 function findAndReplaceButtons() {
@@ -56,25 +70,43 @@ function findAndReplaceButtons() {
                 clonedButton.dataset.enjoModified = 'true';
                 clonedButton.classList.add('enjo-checker-button');
 
+                const resultDiv = document.createElement('div');
+                resultDiv.classList.add('enjo-result');
+                resultDiv.style.cssText = `
+                    display: none;
+                    margin-top: 10px;
+                    padding: 10px;
+                    border-radius: 8px;
+                    background-color: #25282b;
+                    border: 1px solid #3e4246;
+                    color: white;
+                    font-size: 14px;
+                    line-height: 1.5;
+                `;
+                button.parentNode.insertBefore(resultDiv, clonedButton.nextSibling);
+
                 clonedButton.addEventListener('click', (event) => {
                     event.preventDefault();
                     const postContent = getPostText();
                     
                     if (postContent) {
+                        resultDiv.style.display = 'none';
+
                         chrome.runtime.sendMessage({
                             action: 'sendAPIRequest',
                             text: postContent
                         }, (response) => {
                             if (response.success) {
-                                const result = response.data;
-                                alert(`🔥 炎上チェック結果:\nリスクレベル: ${result.risk_level}\n\nAIコメント: ${result.ai_comment}`);
+                                showEnjoResult(resultDiv, response.data);
                             } else {
                                 console.error('API呼び出し中にエラーが発生しました:', response.error);
-                                alert('🚨 炎上チェックに失敗しました。時間をおいて再度お試しください。');
+                                resultDiv.innerHTML = '<p style="color:red;">🚨 炎上チェックに失敗しました。</p>';
+                                resultDiv.style.display = 'block';
                             }
                         });
                     } else {
-                        alert('投稿内容がありません。');
+                        resultDiv.innerHTML = '<p style="color:red;">投稿内容がありません。</p>';
+                        resultDiv.style.display = 'block';
                     }
                 });
             } catch (error) {
@@ -85,22 +117,18 @@ function findAndReplaceButtons() {
 }
 
 function initialize() {
-    // 初回実行
-    setTimeout(() => findAndReplaceButtons(), 2000);
+    const initialScan = () => {
+        if (document.querySelector('[data-testid="tweetButton"], [data-testid="tweetButtonInline"]')) {
+            findAndReplaceButtons();
+        } else {
+            setTimeout(initialScan, 500);
+        }
+    };
+    initialScan();
     
-    // DOMの変化を監視し、新しいボタンを置き換える
     const debouncedFindAndReplace = debounce(findAndReplaceButtons, 1000);
     const observer = new MutationObserver(debouncedFindAndReplace);
     observer.observe(document.body, { childList: true, subtree: true });
-
-    // URLの変更も監視
-    let currentURL = location.href;
-    setInterval(() => {
-        if (location.href !== currentURL) {
-            currentURL = location.href;
-            findAndReplaceButtons();
-        }
-    }, 1000);
 }
 
 if (document.readyState === 'loading') {
