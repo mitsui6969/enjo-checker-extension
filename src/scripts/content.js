@@ -2,7 +2,7 @@
 
 const SELECTORS = {
     POST_TEXTAREA: 'div[role="textbox"][data-testid="tweetTextarea_0"]',
-    REPLY_TEXTAREA: 'div[role="textbox"][data-testid*="tweetTextarea_"]',
+    REPLY_TEXTAREA: 'div[role="textbox"][data-testid*="tweetTextarea_"]:not([data-testid="tweetTextarea_0"])',
     TWEET_BUTTON_TEST_IDS: ['tweetButtonInline', 'tweetButton', 'postButton'],
     REPLY_BUTTON_TEST_ID: 'replyButton',
     POST_TEXTS: ['投稿', 'Post', 'ポスト']
@@ -32,19 +32,24 @@ function getPostText() {
 }
 
 function showEnjoResult(resultDiv, data) {
+    if (resultDiv.enjoTimeoutId) {
+        clearTimeout(resultDiv.enjoTimeoutId);
+    }
+    
     const riskLevelText = `リスクレベル: ${data.risk_level}`;
     const aiCommentText = `AIコメント: ${data.ai_comment}`;
 
     resultDiv.innerHTML = `<p><strong></strong></p><p><strong></strong></p>`;
-    const strongs = resultDiv.querySelectorAll('strong');
-    strongs[0].textContent = riskLevelText;
-    strongs[1].textContent = aiCommentText;
+    const [riskStrong, aiCommentStrong] = resultDiv.querySelectorAll('strong');
+    riskStrong.textContent = riskLevelText;
+    aiCommentStrong.textContent = aiCommentText;
     
     resultDiv.style.display = 'block';
 
-    setTimeout(() => {
+    resultDiv.enjoTimeoutId = setTimeout(() => {
         resultDiv.style.display = 'none';
         resultDiv.innerHTML = '';
+        delete resultDiv.enjoTimeoutId;
     }, 5000);
 }
 
@@ -66,7 +71,7 @@ function findAndHijackButtons() {
         );
 
         const isReplyButton = (
-            testId === SELECTORS.REPLY_BUTTON_ID &&
+            testId === SELECTORS.REPLY_BUTTON_TEST_ID &&
             button.offsetWidth > 0 && button.offsetHeight > 0
         );
 
@@ -75,7 +80,6 @@ function findAndHijackButtons() {
                 button.textContent = '🔥 炎上チェック';
                 button.dataset.enjoHijacked = 'true';
                 button.classList.add('enjo-checker-button');
-                
                 button.removeAttribute('disabled');
                 button.style.pointerEvents = 'auto';
 
