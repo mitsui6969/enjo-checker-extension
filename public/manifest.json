@@ -20,5 +20,14 @@
         ],
         "js": ["content.js"]
         }
+    ],
+
+    "action": {
+        "default_popup": "popup.html"
+    },
+
+    "host_permissions": [
+        "https://hack-u-backend.onrender.com/check/post"
     ]
+
 }
