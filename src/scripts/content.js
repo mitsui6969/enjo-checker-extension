@@ -1,6 +1,4 @@
 /* global chrome */
-console.log('🔥 炎上チェッカー Content Script 読み込み開始');
-console.log('現在のURL:', window.location.href);
 
 const SELECTORS = {
     POST_TEXTAREA: 'div[role="textbox"][data-testid="tweetTextarea_0"]',
@@ -36,11 +34,12 @@ function getPostText() {
 function showEnjoResult(resultDiv, data) {
     const riskLevelText = `リスクレベル: ${data.risk_level}`;
     const aiCommentText = `AIコメント: ${data.ai_comment}`;
+
+    resultDiv.innerHTML = `<p><strong></strong></p><p><strong></strong></p>`;
+    const strongs = resultDiv.querySelectorAll('strong');
+    strongs[0].textContent = riskLevelText;
+    strongs[1].textContent = aiCommentText;
     
-    resultDiv.innerHTML = `
-        <p><strong>${riskLevelText}</strong></p>
-        <p><strong>${aiCommentText}</strong></p>
-    `;
     resultDiv.style.display = 'block';
 
     setTimeout(() => {
@@ -67,34 +66,22 @@ function findAndHijackButtons() {
         );
 
         const isReplyButton = (
-            testId === SELECTORS.REPLY_BUTTON_TEST_ID &&
+            testId === SELECTORS.REPLY_BUTTON_ID &&
             button.offsetWidth > 0 && button.offsetHeight > 0
         );
 
         if (isPostButton || isReplyButton) {
             try {
-                // ボタンの見た目と挙動を直接乗っ取る
                 button.textContent = '🔥 炎上チェック';
                 button.dataset.enjoHijacked = 'true';
                 button.classList.add('enjo-checker-button');
                 
-                // ボタンの有効・無効状態を強制的に無視
                 button.removeAttribute('disabled');
                 button.style.pointerEvents = 'auto';
 
                 const resultDiv = document.createElement('div');
                 resultDiv.classList.add('enjo-result');
-                resultDiv.style.cssText = `
-                    display: none;
-                    margin-top: 10px;
-                    padding: 10px;
-                    border-radius: 8px;
-                    background-color: #25282b;
-                    border: 1px solid #3e4246;
-                    color: white;
-                    font-size: 14px;
-                    line-height: 1.5;
-                `;
+                resultDiv.style.display = 'none'; 
                 button.parentNode.insertBefore(resultDiv, button.nextSibling);
 
                 const newClickListener = (event) => {
@@ -126,9 +113,9 @@ function findAndHijackButtons() {
 
                 button.addEventListener('click', newClickListener, { capture: true });
 
-                // テキストエリアでEnterキーを押したときに、デフォルトの動作を無効化
                 const textarea = document.querySelector(SELECTORS.POST_TEXTAREA) || document.querySelector(SELECTORS.REPLY_TEXTAREA);
-                if (textarea) {
+                if (textarea && !textarea.dataset.enjoEnterHijacked) {
+                    textarea.dataset.enjoEnterHijacked = 'true';
                     textarea.addEventListener('keydown', (event) => {
                         if (event.key === 'Enter') {
                             event.preventDefault();
@@ -145,16 +132,8 @@ function findAndHijackButtons() {
 }
 
 function initialize() {
-    const initialScan = () => {
-        if (document.querySelector(SELECTORS.POST_TEXTAREA) || document.querySelector('[data-testid="tweetButton"], [data-testid="tweetButtonInline"]')) {
-            findAndHijackButtons();
-        } else {
-            setTimeout(initialScan, 500);
-        }
-    };
-    initialScan();
-    
-    const debouncedFindAndHijack = debounce(findAndHijackButtons, 1000);
+    findAndHijackButtons();
+    const debouncedFindAndHijack = debounce(findAndHijackButtons, 300);
     const observer = new MutationObserver(debouncedFindAndHijack);
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'disabled'] });
 }
@@ -181,6 +160,16 @@ style.textContent = `
         align-items: center;
         animation: pulse 0.5s ease-in-out;
     }
+    .enjo-result {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #25282b;
+        border: 1px solid #3e4246;
+        color: white;
+        font-size: 14px;
+        line-height: 1.5;
+    }
     @keyframes pulse {
         0% { transform: scale(1); }
         50% { transform: scale(1.05); }
@@ -188,5 +177,3 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-console.log('✅ 炎上チェッカー初期化完了');
