@@ -2,6 +2,14 @@
 console.log('🔥 炎上チェッカー Content Script 読み込み開始');
 console.log('現在のURL:', window.location.href);
 
+const SELECTORS = {
+    POST_TEXTAREA: 'div[role="textbox"][data-testid="tweetTextarea_0"]',
+    REPLY_TEXTAREA: 'div[role="textbox"][data-testid*="tweetTextarea_"]',
+    TWEET_BUTTON_TEST_IDS: ['tweetButtonInline', 'tweetButton', 'postButton'],
+    REPLY_BUTTON_TEST_ID: 'replyButton',
+    POST_TEXTS: ['投稿', 'Post', 'ポスト']
+};
+
 function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -12,13 +20,12 @@ function debounce(func, wait) {
 }
 
 function getPostText() {
-
-    const postTextarea = document.querySelector('div[role="textbox"][data-testid="tweetTextarea_0"]');
+    const postTextarea = document.querySelector(SELECTORS.POST_TEXTAREA);
     if (postTextarea) {
         return postTextarea.textContent;
     }
 
-    const replyTextarea = document.querySelector('div[role="textbox"][data-testid*="tweetTextarea_"]');
+    const replyTextarea = document.querySelector(SELECTORS.REPLY_TEXTAREA);
     if (replyTextarea) {
         return replyTextarea.textContent;
     }
@@ -27,9 +34,12 @@ function getPostText() {
 }
 
 function showEnjoResult(resultDiv, data) {
+    const riskLevelText = `リスクレベル: ${data.risk_level}`;
+    const aiCommentText = `AIコメント: ${data.ai_comment}`;
+    
     resultDiv.innerHTML = `
-        <p><strong>リスクレベル:</strong> ${data.risk_level}</p>
-        <p><strong>AIコメント:</strong> ${data.ai_comment}</p>
+        <p><strong>${riskLevelText}</strong></p>
+        <p><strong>${aiCommentText}</strong></p>
     `;
     resultDiv.style.display = 'block';
 
@@ -50,14 +60,14 @@ function findAndReplaceButtons() {
         const testId = button.getAttribute('data-testid');
 
         const isPostButton = (
-            (text.includes('投稿') || text.includes('Post') || text.includes('ポスト')) ||
-            (button.getAttribute('aria-label')?.includes('投稿') || button.getAttribute('aria-label')?.includes('Post') || button.getAttribute('aria-label')?.includes('ポスト'))
+            (SELECTORS.POST_TEXTS.some(t => text.includes(t))) ||
+            (button.getAttribute('aria-label') && SELECTORS.POST_TEXTS.some(t => button.getAttribute('aria-label').includes(t)))
         ) && (
-            testId === 'tweetButtonInline' || testId === 'tweetButton' || testId === 'postButton'
+            SELECTORS.TWEET_BUTTON_TEST_IDS.includes(testId)
         );
 
         const isReplyButton = (
-            testId === 'replyButton' &&
+            testId === SELECTORS.REPLY_BUTTON_TEST_ID &&
             button.offsetWidth > 0 && button.offsetHeight > 0
         );
 
@@ -118,7 +128,7 @@ function findAndReplaceButtons() {
 
 function initialize() {
     const initialScan = () => {
-        if (document.querySelector('[data-testid="tweetButton"], [data-testid="tweetButtonInline"]')) {
+        if (document.querySelector(SELECTORS.POST_TEXTAREA) || document.querySelector('[data-testid="tweetButton"], [data-testid="tweetButtonInline"]')) {
             findAndReplaceButtons();
         } else {
             setTimeout(initialScan, 500);
