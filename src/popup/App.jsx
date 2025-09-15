@@ -3,15 +3,14 @@ import './index.css';
 
 function App() {
     // 初期状態としてのリスクレベルとコメント
-    const [riskLevel, setRiskLevel] = useState('high');
-    const [aiComment, setAiComment] = useState('炎上するわこれ。やめた方がいいよ。');
+    const [riskLevel, setRiskLevel] = useState('');
+    const [aiComment, setAiComment] = useState('');
 
     // モックデータ（通常はAPIから取得）
-    const mockData = {
+    const mockData = React.useMemo(() => ({
         risk_level: 'high',  // high, middle, low
         ai_comment: 'これはモックデータです。多分炎上するべ',
-    };
-
+    }), []);
     // モックデータを受け取って状態を更新
     useEffect(() => {
         setRiskLevel(mockData.risk_level);
@@ -33,8 +32,8 @@ function App() {
     }[riskLevel];
 
     return (
-        <div className="container">
-            <div className={`emoji ${riskLevel}`}>
+        <div className={`container ${riskLevel}`}>
+            <div className="emoji">
                 <h1>{emoji}</h1> {/* 絵文字の表示 */}
             </div>
             <div className="text">

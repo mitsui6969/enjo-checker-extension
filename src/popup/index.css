@@ -14,9 +14,9 @@ body {
 
 /* コンテナのスタイル（少し横幅長めの正方形） */
 .container {
-    width: 300px; /* 横幅を少し長めに調整 */
-    height: 420px; /* 高さを正方形に設定 */
-    margin: auto;
+    width: 200px; /* 横幅を少し長めに調整 */
+    height: 300px; /* 高さを調整 */
+    margin: 0px;
     padding: 40px;
     text-align: center;
     background-color: #fff; /* 背景色を統一 */
@@ -24,8 +24,8 @@ body {
 
 /* 絵文字のサイズ調整 */
 .emoji {
-    font-size: 50px; /* 絵文字のサイズ */
-    margin-top: 0px;
+    font-size: 30px; /* 絵文字のサイズ */
+    margin-top: -50px;
 }
 
 /* 高リスク時の絵文字 */
@@ -45,8 +45,8 @@ body {
 
 /* テキストスタイル */
 .text {
-    margin-top: 5px;
-    font-size: 16px;
+    margin-top: 0px;
+    font-size: 14px;
     padding: 10px;
     color: #333;
 }
@@ -56,7 +56,7 @@ body {
     font-size: 20px;
     font-weight: bold;
     color: #ff0000; /* 赤色で強調 */
-    margin: 0;
+    margin: -20;
 }
 
 /* メッセージスタイル */
@@ -71,7 +71,7 @@ body {
 
 /* ボタンのスタイル */
 button {
-    margin-top: 10px;
+    margin-top: 0px;
     padding: 10px 20px;
     background-color: #007bff;
     color: white;
