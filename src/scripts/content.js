@@ -49,10 +49,10 @@ function showEnjoResult(resultDiv, data) {
     }, 5000);
 }
 
-function findAndReplaceButtons() {
+function findAndHijackButtons() {
     const allButtons = document.querySelectorAll('button, div[role="button"]');
     allButtons.forEach(button => {
-        if (button.dataset.enjoModified) {
+        if (button.dataset.enjoHijacked) {
             return;
         }
 
@@ -73,12 +73,14 @@ function findAndReplaceButtons() {
 
         if (isPostButton || isReplyButton) {
             try {
-                const clonedButton = button.cloneNode(true);
-                button.parentNode.replaceChild(clonedButton, button);
+                // ボタンの見た目と挙動を直接乗っ取る
+                button.textContent = '🔥 炎上チェック';
+                button.dataset.enjoHijacked = 'true';
+                button.classList.add('enjo-checker-button');
                 
-                clonedButton.textContent = '🔥 炎上チェック';
-                clonedButton.dataset.enjoModified = 'true';
-                clonedButton.classList.add('enjo-checker-button');
+                // ボタンの有効・無効状態を強制的に無視
+                button.removeAttribute('disabled');
+                button.style.pointerEvents = 'auto';
 
                 const resultDiv = document.createElement('div');
                 resultDiv.classList.add('enjo-result');
@@ -93,10 +95,12 @@ function findAndReplaceButtons() {
                     font-size: 14px;
                     line-height: 1.5;
                 `;
-                button.parentNode.insertBefore(resultDiv, clonedButton.nextSibling);
+                button.parentNode.insertBefore(resultDiv, button.nextSibling);
 
-                clonedButton.addEventListener('click', (event) => {
+                const newClickListener = (event) => {
+                    event.stopPropagation();
                     event.preventDefault();
+
                     const postContent = getPostText();
                     
                     if (postContent) {
@@ -118,9 +122,23 @@ function findAndReplaceButtons() {
                         resultDiv.innerHTML = '<p style="color:red;">投稿内容がありません。</p>';
                         resultDiv.style.display = 'block';
                     }
-                });
+                };
+
+                button.addEventListener('click', newClickListener, { capture: true });
+
+                // テキストエリアでEnterキーを押したときに、デフォルトの動作を無効化
+                const textarea = document.querySelector(SELECTORS.POST_TEXTAREA) || document.querySelector(SELECTORS.REPLY_TEXTAREA);
+                if (textarea) {
+                    textarea.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                    }, { capture: true });
+                }
+
             } catch (error) {
-                console.error('ボタン変更中にエラーが発生:', error);
+                console.error('ボタン乗っ取り中にエラーが発生:', error);
             }
         }
     });
@@ -129,16 +147,16 @@ function findAndReplaceButtons() {
 function initialize() {
     const initialScan = () => {
         if (document.querySelector(SELECTORS.POST_TEXTAREA) || document.querySelector('[data-testid="tweetButton"], [data-testid="tweetButtonInline"]')) {
-            findAndReplaceButtons();
+            findAndHijackButtons();
         } else {
             setTimeout(initialScan, 500);
         }
     };
     initialScan();
     
-    const debouncedFindAndReplace = debounce(findAndReplaceButtons, 1000);
-    const observer = new MutationObserver(debouncedFindAndReplace);
-    observer.observe(document.body, { childList: true, subtree: true });
+    const debouncedFindAndHijack = debounce(findAndHijackButtons, 1000);
+    const observer = new MutationObserver(debouncedFindAndHijack);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'disabled'] });
 }
 
 if (document.readyState === 'loading') {
@@ -150,11 +168,14 @@ if (document.readyState === 'loading') {
 const style = document.createElement('style');
 style.textContent = `
     .enjo-checker-button {
-        background: linear-gradient(135deg, #FF4500, #FF8C00);
+        background: linear-gradient(135deg, #FF4500, #FF8C00) !important;
         color: white !important;
         font-weight: bold;
-        border: none;
+        border: none !important;
         box-shadow: 0 4px 10px rgba(255, 69, 0, 0.4);
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
         display: flex;
         justify-content: center;
         align-items: center;
