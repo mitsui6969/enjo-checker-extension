@@ -1,7 +1,6 @@
+/* global chrome */
 console.log('🔥 炎上チェッカー Content Script 読み込み開始');
 console.log('現在のURL:', window.location.href);
-
-const API_BASE_URL = 'https://hack-u-backend.onrender.com/';
 
 function debounce(func, wait) {
     let timeout;
@@ -10,37 +9,6 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(context, args), wait);
     };
-}
-
-async function checkPostWithAPI(postContent) {
-    if (!postContent) {
-        console.error("投稿内容が空です。");
-        return null;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/check/post`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ post: postContent })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error(`APIエラー: ${response.status}`, data.detail);
-            return null;
-        }
-
-        console.log("APIレスポンス:", data);
-        return data;
-
-    } catch (error) {
-        console.error('API呼び出し中にエラーが発生しました:', error);
-        return null;
-    }
 }
 
 function getPostText() {
@@ -88,14 +56,25 @@ function findAndReplaceButtons() {
                 clonedButton.dataset.enjoModified = 'true';
                 clonedButton.classList.add('enjo-checker-button');
 
-                clonedButton.addEventListener('click', async (event) => {
+                clonedButton.addEventListener('click', (event) => {
                     event.preventDefault();
                     const postContent = getPostText();
-                    const result = await checkPostWithAPI(postContent);
-                    if (result) {
-                        alert(`🔥 炎上チェック結果:\nリスクレベル: ${result.risk_level}\n\nAIコメント: ${result.ai_comment}`);
+                    
+                    if (postContent) {
+                        chrome.runtime.sendMessage({
+                            action: 'sendAPIRequest',
+                            text: postContent
+                        }, (response) => {
+                            if (response.success) {
+                                const result = response.data;
+                                alert(`🔥 炎上チェック結果:\nリスクレベル: ${result.risk_level}\n\nAIコメント: ${result.ai_comment}`);
+                            } else {
+                                console.error('API呼び出し中にエラーが発生しました:', response.error);
+                                alert('🚨 炎上チェックに失敗しました。時間をおいて再度お試しください。');
+                            }
+                        });
                     } else {
-                        alert('🚨 炎上チェックに失敗しました。時間をおいて再度お試しください。');
+                        alert('投稿内容がありません。');
                     }
                 });
             } catch (error) {
@@ -106,20 +85,23 @@ function findAndReplaceButtons() {
 }
 
 function initialize() {
+    // 初回実行
     setTimeout(() => findAndReplaceButtons(), 2000);
     
+    // DOMの変化を監視し、新しいボタンを置き換える
     const debouncedFindAndReplace = debounce(findAndReplaceButtons, 1000);
     const observer = new MutationObserver(debouncedFindAndReplace);
     observer.observe(document.body, { childList: true, subtree: true });
-}
 
-let currentURL = location.href;
-setInterval(() => {
-    if (location.href !== currentURL) {
-        currentURL = location.href;
-        findAndReplaceButtons();
-    }
-}, 1000);
+    // URLの変更も監視
+    let currentURL = location.href;
+    setInterval(() => {
+        if (location.href !== currentURL) {
+            currentURL = location.href;
+            findAndReplaceButtons();
+        }
+    }, 1000);
+}
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialize);

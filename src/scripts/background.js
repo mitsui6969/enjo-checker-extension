@@ -1,3 +1,4 @@
+/* global chrome */
 // バックグラウンド処理(API通信など)をここに書く
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
