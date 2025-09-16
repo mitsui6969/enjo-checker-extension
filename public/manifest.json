@@ -16,18 +16,32 @@
         {
         "matches": [
             "https://twitter.com/*",
-            "https://x.com/home"
+            "https://x.com/*"
         ],
         "js": ["content.js"]
         }
     ],
 
-    "action": {
-        "default_popup": "popup.html"
-    },
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "popup.html",
+                "assets/*"
+            ],
+            "matches": [
+                "https://twitter.com/*",
+                "https://x.com/*"
+            ]
+        }
+    ],
 
     "host_permissions": [
-        "https://hack-u-backend.onrender.com/check/post"
+        "https://hack-u-backend.onrender.com/*"
+    ],
+
+    "permissions": [
+        "storage",
+        "activeTab"
     ]
 
 }

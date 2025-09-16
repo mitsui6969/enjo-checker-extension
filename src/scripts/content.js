@@ -59,6 +59,72 @@ function showTemporaryMessage(element, htmlContent, duration = 3000) {
     }, duration);
 }
 
+// ▼▼▼ iframeポップアップを管理する関数を追加 ▼▼▼
+function hidePopupIframe() {
+    const iframe = document.getElementById('enjo-check-iframe-container');
+    if (iframe) {
+        iframe.remove();
+    }
+    // メッセージリスナーを削除（クリーンアップ）
+    window.removeEventListener('message', handleMessageFromPopup);
+}
+
+function showPopupIframe(apiData) {
+    hidePopupIframe(); // 既存のポップアップがあれば削除
+
+    const container = document.createElement('div');
+    container.id = 'enjo-check-iframe-container';
+    container.style.position = 'fixed';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.width = '100vw';
+    container.style.height = '100vh';
+    container.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    container.style.zIndex = '9999';
+    container.style.display = 'flex';
+    container.style.justifyContent = 'center';
+    container.style.alignItems = 'center';
+    
+    const iframe = document.createElement('iframe');
+    iframe.src = chrome.runtime.getURL('dist/index.html');
+    iframe.style.width = '500px';
+    iframe.style.height = '350px';
+    iframe.style.border = 'none';
+    iframe.style.borderRadius = '12px';
+
+    // iframeの読み込みが完了したらデータを送信
+    iframe.onload = () => {
+        iframe.contentWindow.postMessage({
+            type: 'ENJO_CHECK_DATA',
+            data: apiData
+        }, '*');
+    };
+
+    container.appendChild(iframe);
+    document.body.appendChild(container);
+
+    // iframeからのメッセージを待機
+    window.addEventListener('message', handleMessageFromPopup);
+}
+
+// iframeからのメッセージを処理するハンドラ
+function handleMessageFromPopup(event) {
+    // 自身(content script)からのメッセージは無視
+    if (event.source === window) {
+        return;
+    }
+
+    const { type } = event.data;
+    if (type === 'ENJO_CLOSE_POPUP') {
+        hidePopupIframe();
+    } else if (type === 'ENJO_DO_POST') {
+        // ポスト実行のロジック（後述）
+        console.log("ポストを実行します");
+        hidePopupIframe();
+        // ここで元の投稿ボタンのクリックイベントを発火させる処理が必要
+    }
+}
+
 function findAndHijackButtons() {
     const allButtons = document.querySelectorAll('button, div[role="button"]');
     allButtons.forEach(button => {
@@ -115,7 +181,9 @@ function findAndHijackButtons() {
                             text: postContent
                         }, (response) => {
                             if (response.success) {
+                                // 成功時
                                 console.log('レスポンス', response.data);
+                                showPopupIframe(response.data, button);
                             } else {
                                 console.error('API呼び出し中にエラーが発生しました:', response.error);
                                 const errorMessage = '<p class="enjo-error">炎上チェックに失敗しました</p>';

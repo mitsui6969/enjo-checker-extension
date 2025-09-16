@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './index.css';
-import mockData from '../mocks/apiMock.json';
+// import mockData from '../mocks/apiMock.json';
 
 function App() {
 
@@ -9,12 +9,25 @@ function App() {
     const [aiComment, setAiComment] = useState('');
     const [isPostOk, setIsPostOk] = useState(false);
 
-    // モックデータを受け取って状態を更新
+    // ▼▼▼ content.jsからのメッセージを受け取るuseEffectを追加 ▼▼▼
     useEffect(() => {
-        setRiskLevel(mockData.risk_level);
-        setAiComment(mockData.ai_comment);
-        setIsPostOk(riskInfoMap[mockData.risk_level]?.isPostOk ?? false);
-    }, []);
+        const handleMessage = (event) => {
+            // event.data に content.js から送られたデータが入る
+            if (event.data.type === 'ENJO_CHECK_DATA') {
+                const { data } = event.data;
+                setRiskLevel(data.risk_level);
+                setAiComment(data.ai_comment);
+                setIsPostOk(data.risk_level === 'low'); // 低リスクなら最初からOK状態
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+
+        // コンポーネントが不要になったらリスナーを削除
+        return () => {
+            window.removeEventListener('message', handleMessage);
+        };
+    }, []); // 最初の一回だけ実行
 
     const riskInfoMap = {
         high: { emoji: '🥵', text: '高', isPostOk: false },
