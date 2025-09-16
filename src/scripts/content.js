@@ -138,11 +138,6 @@ function findAndHijackButtons() {
                 const textarea = document.querySelector(SELECTORS.POST_TEXTAREA) || document.querySelector(SELECTORS.REPLY_TEXTAREA);
                 if (textarea && !textarea.dataset.enjoEnterHijacked) {
                     textarea.dataset.enjoEnterHijacked = 'true';
-                    // textarea.addEventListener('keydown', (event) => {
-                    //     if (event.key === 'Enter') {
-                    //         event.stopPropagation();
-                    //     }
-                    // }, { capture: true });
                 }
 
             } catch (error) {
