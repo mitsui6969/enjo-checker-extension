@@ -15,11 +15,11 @@ body {
 /* コンテナのスタイル（少し横幅長めの正方形） */
 .container {
     width: 230px; /* 横幅を少し長めに調整 */
-    height: 200px; /* 高さを調整 */
-    margin: 0px;
+    height: 250px; /* 高さを調整 */
     padding: 40px;
     text-align: center;
     background-color: #fff; /* 背景色を統一 */
+    gap: 8px; 
 }
 
 /* 絵文字のサイズ調整 */
@@ -32,7 +32,7 @@ body {
 
 /* テキストスタイル */
 .text {
-    margin-top: -20px;
+    margin-top: 20px;
     font-size: 14px;
     padding: 10px;
     color: #333;
@@ -48,7 +48,7 @@ body {
 
 /* メッセージスタイル */
 .message {
-    margin-top: 20px;
+    margin-top: 30px;
     font-size: 16px;
     padding: 10px;
     border-radius: 5px;
@@ -58,16 +58,44 @@ body {
 
 /* ボタンのスタイル */
 button {
-    margin-top: -20px;
+    margin-top: 20px;
     padding: 10px 20px;
     font-size: 14px;
-    background-color: #f7f7f7; /* 薄いグレー背景 */
-    color: #888;              /* 文字色も薄め */
+    background-color: #2d2d2d; 
+    color: #ffffff;              /* 文字色も薄め */
     border: 1px solid #ccc;   /* 薄いグレー枠線 */
     border-radius: 50px;      /* 丸みを強調 */
-    cursor: not-allowed;      /* 無効っぽいカーソル */
 }
 
 button:hover {
     background-color: #0056b3;
 }
+
+/* 2つのボタンを縦に並べて同じ幅にする */
+.actions {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;                /* ボタン間のすき間 */
+}
+.actions button {
+    margin-top: 0;           /* 既存の button の負のマージンを打ち消す */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 戻るボタンの見た目（同サイズ・控えめ配色） */
+button.secondary {
+    background-color: #fff;
+    color: #2d2d2d;
+    border: 1px solid #ccc;
+}
+button.secondary:hover {
+    background-color: #f2f2f2;
+}
+
+/* ↓ ボタンとメッセージの間隔を詰める調整 */
+.text { padding-bottom: 0; }                 /* 下パディングを消す */
+.message { margin: 25px 0 0; padding: 0; }    /* p の下マージンを消し、上だけ少し */
+.actions { margin-top: 6px; }                /* ボタン側の余白も少しだけに */
+

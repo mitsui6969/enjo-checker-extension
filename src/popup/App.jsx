@@ -56,7 +56,11 @@ const { emoji, text: riskText } = riskInfoMap[riskLevel] || {};
                 <h2>{riskText}</h2> {/* リスクレベルに応じたテキスト */}
                 <p className="message">{aiComment}</p> {/* メッセージ表示 */}
             </div>
-            <button>このままポストする</button> {/* ボタン */}
+            <div className="actions">
+                <button>このままポストする</button>
+                <button className="secondary">炎上チェックに戻る</button>
+            </div>
+
         </div>
     );
 }
