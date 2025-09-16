@@ -53,45 +53,37 @@ body {
     padding: 10px;
     border-radius: 5px;
     text-align: center;
-    background-color: #fff;
 }
 
-/* ボタンのスタイル */
 button {
     margin-top: 20px;
-    padding: 10px 20px;
-    font-size: 14px;
-    background-color: #2d2d2d; 
-    color: #ffffff;              /* 文字色も薄め */
-    border: 1px solid #ccc;   /* 薄いグレー枠線 */
-    border-radius: 50px;      /* 丸みを強調 */
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-/* 2つのボタンを縦に並べて同じ幅にする */
-.actions {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;                /* ボタン間のすき間 */
-}
-.actions button {
-    margin-top: 0;           /* 既存の button の負のマージンを打ち消す */
     width: 100%;
-    box-sizing: border-box;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid;
+    border-radius: 50px;      /* 丸みを強調 */
+    background-color: transparent;
 }
 
 /* 戻るボタンの見た目（同サイズ・控えめ配色） */
 button.secondary {
-    background-color: #fff;
-    color: #2d2d2d;
-    border: 1px solid #ccc;
+    background-color: #2d2d2d;
+    color: #fff;
+    border-color: transparent;
 }
 button.secondary:hover {
-    background-color: #f2f2f2;
+    background-color: #616161;
+    border-color: transparent;
+}
+
+button.do-post {
+    color: #FF3F26;
+    border-color: #FF3F26;
+}
+button.do-post:hover {
+    background-color: #FF3F26;
+    color: #fff;
+    border-color: #FF3F26;
 }
 
 /* ↓ ボタンとメッセージの間隔を詰める調整 */
