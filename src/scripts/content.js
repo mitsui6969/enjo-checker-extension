@@ -213,7 +213,7 @@ style.textContent = `
 
         padding: 10px;
         border-radius: 8px;
-        background-color: #E0E0E0;
+        background-color: #D5D5D5;
         color: white;
         font-size: 14px;
         line-height: 1.5;
