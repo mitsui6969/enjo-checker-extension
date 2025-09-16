@@ -45,9 +45,9 @@ function App() {
 
             <div className="actions">
                 { isPostOk ? (
-                        <button className="secondary" onClick={ ()=>handleReturnButtonClick() }>炎上チェックに戻る🔥</button>
+                        <button className="secondary" onClick={handleReturnButtonClick}>炎上チェックに戻る🔥</button>
                     ):(
-                        <button className='do-post' onClick={ ()=>handleDoPostButtonClick() }>このままポストする</button>
+                        <button className='do-post' onClick={handleDoPostButtonClick}>このままポストする</button>
                     )
                 }
             </div>
