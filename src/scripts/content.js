@@ -122,7 +122,6 @@ function findAndHijackButtons() {
                     textarea.dataset.enjoEnterHijacked = 'true';
                     textarea.addEventListener('keydown', (event) => {
                         if (event.key === 'Enter') {
-                            event.preventDefault();
                             event.stopPropagation();
                         }
                     }, { capture: true });
