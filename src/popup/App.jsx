@@ -8,8 +8,8 @@ function App() {
 
     // モックデータ（通常はAPIから取得）
     const mockData = React.useMemo(() => ({
-        risk_level: 'high',  // high, middle, low
-        ai_comment: 'これはモックデータです。多分炎上するべ',
+        risk_level: 'middle',  // high, middle, low
+        ai_comment: '多分炎上しないよ！',
     }), []);
     // モックデータを受け取って状態を更新
     useEffect(() => {
@@ -17,19 +17,13 @@ function App() {
         setAiComment(mockData.ai_comment);
     }, [mockData]);
 
-    // 絵文字をリスクレベルに応じて変更
-    const emoji = {
-        high: '🔥',
-        middle: '⚠️',
-        low: '✅',
-    }[riskLevel];
+const riskInfoMap = {
+    high: { emoji: '🥵', text: '炎上確率：高' },
+    middle: { emoji: '🤔', text: '炎上確率：中' },
+    low: { emoji: '😊', text: '炎上確率：低' },
+};
 
-    // リスクレベルに応じたテキスト
-    const riskText = {
-        high: '炎上確率：高',
-        middle: '炎上確率：中',
-        low: '炎上確率：低',
-    }[riskLevel];
+const { emoji, text: riskText } = riskInfoMap[riskLevel] || {};
 
     return (
         <div className={`container ${riskLevel}`}>
@@ -38,7 +32,7 @@ function App() {
             </div>
             <div className="text">
                 <h2>{riskText}</h2> {/* リスクレベルに応じたテキスト */}
-                <p>{aiComment}</p> {/* メッセージ表示 */}
+                <p className="message">{aiComment}</p> {/* メッセージ表示 */}
             </div>
             <button>このままポストする</button> {/* ボタン */}
         </div>
