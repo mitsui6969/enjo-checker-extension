@@ -193,10 +193,5 @@ style.textContent = `
         font-size: 14px;
         line-height: 1.5;
     }
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
 `;
 document.head.appendChild(style);
