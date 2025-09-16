@@ -43,6 +43,22 @@ function updateAllButtonStates() {
     });
 }
 
+function showTemporaryMessage(element, htmlContent, duration = 3000) {
+    // 既存のタイマーがあればクリアする
+    if (element.enjoTimeoutId) {
+        clearTimeout(element.enjoTimeoutId);
+    }
+    element.innerHTML = htmlContent;
+    element.style.display = 'block';
+
+    // 指定時間後にメッセージを非表示にする
+    element.enjoTimeoutId = setTimeout(() => {
+        element.style.display = 'none';
+        element.innerHTML = '';
+        delete element.enjoTimeoutId;
+    }, duration);
+}
+
 function findAndHijackButtons() {
     const allButtons = document.querySelectorAll('button, div[role="button"]');
     allButtons.forEach(button => {
@@ -80,6 +96,9 @@ function findAndHijackButtons() {
                     button.parentNode.insertBefore(resultDiv, button.nextSibling);
                 }
 
+                // メッセージをボタンの上に表示するために親要素を基準にする
+                button.parentNode.style.position = 'relative';
+
                 // クリック時の動作を定義
                 const newClickListener = (event) => {
                     event.stopPropagation();
@@ -99,8 +118,8 @@ function findAndHijackButtons() {
                                 console.log('レスポンス', response.data);
                             } else {
                                 console.error('API呼び出し中にエラーが発生しました:', response.error);
-                                resultDiv.innerHTML = '<p style="color:red;">🚨 炎上チェックに失敗しました。</p>';
-                                resultDiv.style.display = 'block';
+                                const errorMessage = '<p class="enjo-error">炎上チェックに失敗しました</p>';
+                                showTemporaryMessage(resultDiv, errorMessage, 3000);
                             }
                         });
                     }
@@ -184,11 +203,17 @@ style.textContent = `
     }
 
     .enjo-result {
-        margin-top: 10px;
+        position: absolute;
+        bottom: calc(100% + 5px);
+        left: 0;
+        z-index: 1000;
+        
+        width: max-content;
+        white-space: nowrap;
+
         padding: 10px;
         border-radius: 8px;
-        background-color: #25282b;
-        border: 1px solid #3e4246;
+        background-color: #E0E0E0;
         color: white;
         font-size: 14px;
         line-height: 1.5;
