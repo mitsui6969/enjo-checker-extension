@@ -31,26 +31,16 @@ function getPostText() {
     return '';
 }
 
-function showEnjoResult(resultDiv, data) {
-    if (resultDiv.enjoTimeoutId) {
-        clearTimeout(resultDiv.enjoTimeoutId);
-    }
-    
-    const riskLevelText = `リスクレベル: ${data.risk_level}`;
-    const aiCommentText = `AIコメント: ${data.ai_comment}`;
+// テキストの有無に基づいて、すべての「炎上チェック」ボタンの活性/非活性状態を更新
+function updateAllButtonStates() {
+    const postContent = getPostText();
+    const hasText = postContent.trim().length > 0;
 
-    resultDiv.innerHTML = `<p><strong></strong></p><p><strong></strong></p>`;
-    const [riskStrong, aiCommentStrong] = resultDiv.querySelectorAll('strong');
-    riskStrong.textContent = riskLevelText;
-    aiCommentStrong.textContent = aiCommentText;
-    
-    resultDiv.style.display = 'block';
-
-    resultDiv.enjoTimeoutId = setTimeout(() => {
-        resultDiv.style.display = 'none';
-        resultDiv.innerHTML = '';
-        delete resultDiv.enjoTimeoutId;
-    }, 5000);
+    const allHijackedButtons = document.querySelectorAll('[data-enjo-hijacked="true"]');
+    allHijackedButtons.forEach(button => {
+        // テキストがなければ disabled を true (非活性) に、あれば false (活性) に設定
+        button.disabled = !hasText;
+    });
 }
 
 function findAndHijackButtons() {
@@ -79,21 +69,25 @@ function findAndHijackButtons() {
             try {
                 button.textContent = '🔥 炎上チェック';
                 button.dataset.enjoHijacked = 'true';
-                // button.classList.add('enjo-checker-button');
-                button.removeAttribute('disabled');
                 button.style.pointerEvents = 'auto';
 
-                const resultDiv = document.createElement('div');
-                resultDiv.classList.add('enjo-result');
-                resultDiv.style.display = 'none'; 
-                button.parentNode.insertBefore(resultDiv, button.nextSibling);
+                // 既存の結果表示領域を探し、なければ作成
+                let resultDiv = button.parentNode.querySelector('.enjo-result');
+                if (!resultDiv) {
+                    resultDiv = document.createElement('div');
+                    resultDiv.classList.add('enjo-result');
+                    resultDiv.style.display = 'none'; 
+                    button.parentNode.insertBefore(resultDiv, button.nextSibling);
+                }
 
+                // クリック時の動作を定義
                 const newClickListener = (event) => {
                     event.stopPropagation();
                     event.preventDefault();
 
                     const postContent = getPostText();
                     
+                    // ボタンが活性状態の場合のみAPIを叩く ( safeguard )
                     if (postContent) {
                         resultDiv.style.display = 'none';
 
@@ -102,20 +96,25 @@ function findAndHijackButtons() {
                             text: postContent
                         }, (response) => {
                             if (response.success) {
-                                showEnjoResult(resultDiv, response.data);
+                                console.log('レスポンス', response.data);
                             } else {
                                 console.error('API呼び出し中にエラーが発生しました:', response.error);
                                 resultDiv.innerHTML = '<p style="color:red;">🚨 炎上チェックに失敗しました。</p>';
                                 resultDiv.style.display = 'block';
                             }
                         });
-                    } else {
-                        resultDiv.innerHTML = '<p style="color:red;">投稿内容がありません。</p>';
-                        resultDiv.style.display = 'block';
                     }
-                };
 
+                    console.log('炎上チェックボタンがクリックされました:', postContent)
+                };
+                
+                // 多重登録を防ぐために古いリスナーを削除
+                if (button.enjoClickListener) {
+                    button.removeEventListener('click', button.enjoClickListener, { capture: true });
+                }
                 button.addEventListener('click', newClickListener, { capture: true });
+                button.enjoClickListener = newClickListener;
+
 
                 const textarea = document.querySelector(SELECTORS.POST_TEXTAREA) || document.querySelector(SELECTORS.REPLY_TEXTAREA);
                 if (textarea && !textarea.dataset.enjoEnterHijacked) {
@@ -132,13 +131,25 @@ function findAndHijackButtons() {
             }
         }
     });
+    // この関数が実行された時点で、一度全ボタンの状態を更新する
+    updateAllButtonStates();
 }
 
 function initialize() {
     findAndHijackButtons();
+    
     const debouncedFindAndHijack = debounce(findAndHijackButtons, 300);
     const observer = new MutationObserver(debouncedFindAndHijack);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'disabled'] });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // テキスト入力を監視し、ボタンの状態を更新するリスナーを追加
+    const debouncedUpdateButtons = debounce(updateAllButtonStates, 200);
+    document.body.addEventListener('input', (event) => {
+        // イベント発生元が投稿エリアか確認
+        if (event.target.matches(SELECTORS.POST_TEXTAREA) || event.target.matches(SELECTORS.REPLY_TEXTAREA)) {
+            debouncedUpdateButtons();
+        }
+    });
 }
 
 if (document.readyState === 'loading') {
@@ -161,8 +172,17 @@ style.textContent = `
         display: flex;
         justify-content: center;
         align-items: center;
-        animation: pulse 0.5s ease-in-out;
+        transition: opacity 0.3s ease, background-color 0.3s ease; /* スムーズな変化のためのトランジション */
     }
+
+    /* 非活性時のスタイル */
+    [data-enjo-hijacked="true"][disabled] {
+        background: linear-gradient(135deg, #999, #777) !important; /* グレー系の背景 */
+        opacity: 0.6 !important;
+        cursor: not-allowed !important; /* カーソルを禁止マークに */
+        box-shadow: none !important;
+    }
+
     .enjo-result {
         margin-top: 10px;
         padding: 10px;
