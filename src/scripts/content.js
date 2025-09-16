@@ -79,7 +79,7 @@ function findAndHijackButtons() {
             try {
                 button.textContent = '🔥 炎上チェック';
                 button.dataset.enjoHijacked = 'true';
-                button.classList.add('enjo-checker-button');
+                // button.classList.add('enjo-checker-button');
                 button.removeAttribute('disabled');
                 button.style.pointerEvents = 'auto';
 
@@ -149,7 +149,7 @@ if (document.readyState === 'loading') {
 
 const style = document.createElement('style');
 style.textContent = `
-    .enjo-checker-button {
+    [data-enjo-hijacked="true"] {
         background: linear-gradient(135deg, #FF4500, #FF8C00) !important;
         color: white !important;
         font-weight: bold;
