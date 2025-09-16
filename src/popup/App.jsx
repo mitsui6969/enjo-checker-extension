@@ -13,7 +13,8 @@ function App() {
     useEffect(() => {
         setRiskLevel(mockData.risk_level);
         setAiComment(mockData.ai_comment);
-    }, [mockData]);
+        setIsPostOk(riskInfoMap[mockData.risk_level]?.isPostOk ?? false);
+    }, []);
 
     const riskInfoMap = {
         high: { emoji: '🥵', text: '高', isPostOk: false },
