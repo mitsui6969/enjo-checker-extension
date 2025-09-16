@@ -119,7 +119,7 @@ function findAndHijackButtons() {
                             } else {
                                 console.error('API呼び出し中にエラーが発生しました:', response.error);
                                 const errorMessage = '<p class="enjo-error">炎上チェックに失敗しました</p>';
-                                showTemporaryMessage(resultDiv, errorMessage, 3000);
+                                showTemporaryMessage(resultDiv, errorMessage, 1000);
                             }
                         });
                     }
@@ -138,11 +138,11 @@ function findAndHijackButtons() {
                 const textarea = document.querySelector(SELECTORS.POST_TEXTAREA) || document.querySelector(SELECTORS.REPLY_TEXTAREA);
                 if (textarea && !textarea.dataset.enjoEnterHijacked) {
                     textarea.dataset.enjoEnterHijacked = 'true';
-                    textarea.addEventListener('keydown', (event) => {
-                        if (event.key === 'Enter') {
-                            event.stopPropagation();
-                        }
-                    }, { capture: true });
+                    // textarea.addEventListener('keydown', (event) => {
+                    //     if (event.key === 'Enter') {
+                    //         event.stopPropagation();
+                    //     }
+                    // }, { capture: true });
                 }
 
             } catch (error) {
