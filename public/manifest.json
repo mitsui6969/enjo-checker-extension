@@ -22,6 +22,11 @@
         }
     ],
 
+    "permissions": [
+        "storage",
+        "windows" 
+    ],
+
     "action": {
         "default_popup": "popup.html"
     },
