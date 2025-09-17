@@ -1,13 +1,12 @@
 // バックグラウンド処理(API通信など)をここに書く
-
 /* global chrome */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // 受け取ったメッセージの action が 'sendAPIRequest' であることを確認
-    // ここ変える
     if (message.action === 'sendAPIRequest') {
         
         // ポップアップの代わりにAPIリクエストを送信
-        fetch('https://hack-u-backend.onrender.com/check/post', {
+        // ★一時的にローカルサーバーに送信
+        fetch('http://127.0.0.1:8000/check/post', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

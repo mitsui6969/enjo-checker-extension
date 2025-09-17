@@ -8,6 +8,10 @@
         "128": "icons/icon128.png"
     },
 
+    "action": {
+        "default_popup": "popup.html"
+    },
+
     "background": {
         "service_worker": "background.js"
     },
@@ -36,7 +40,8 @@
     ],
 
     "host_permissions": [
-        "https://hack-u-backend.onrender.com/*"
+        "https://hack-u-backend.onrender.com/*",
+        "http://127.0.0.1:8000/*"
     ],
 
     "permissions": [

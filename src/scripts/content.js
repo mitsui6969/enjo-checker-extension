@@ -86,7 +86,7 @@ function showPopupIframe(apiData) {
     container.style.alignItems = 'center';
     
     const iframe = document.createElement('iframe');
-    iframe.src = chrome.runtime.getURL('dist/index.html');
+    iframe.src = chrome.runtime.getURL('dist/popup.html');
     iframe.style.width = '500px';
     iframe.style.height = '350px';
     iframe.style.border = 'none';
