@@ -43,20 +43,48 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // storageの内容が変更されたときに発火するリスナー
-chrome.storage.onChanged.addListener((changes) => {
-    // 'apiResult' というキーに変更があった場合のみ処理
-    if ('apiResult' in changes) {
-        console.log('apiResultが変更されたのを検知しました。ポップアップを表示します。');
-        
-        // 既存のポップアップがあれば、それを閉じてから新しいものを開く（任意）
-        // findAndClosePopup(); // 必要であれば実装
+// ▼▼▼ storageの変更リスナーを全面的に書き換え ▼▼▼
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
+    // 'local' ストレージの 'apiResult' キーに変更があった場合のみ処理
+    if (namespace === 'local' && 'apiResult' in changes) {
+        console.log('apiResultが変更されたのを検知しました。');
 
-        // 新しいウィンドウをポップアップとして作成
-        chrome.windows.create({
-            url: chrome.runtime.getURL('popup.html'), // 表示するReactアプリのURL
+        // 1. 保存されているウィンドウIDを取得
+        const { popupWindowId } = await chrome.storage.local.get('popupWindowId');
+
+        if (popupWindowId) {
+            try {
+                // 2. ウィンドウがまだ存在するか確認
+                const existingWindow = await chrome.windows.get(popupWindowId, { populate: true });
+
+                // 3. 存在すれば、最前面に表示し、内容の更新を依頼
+                console.log(`既存のポップアップ (ID: ${popupWindowId}) を再利用します。`);
+                await chrome.windows.update(popupWindowId, { focused: true });
+
+                // ポップアップ内のReactアプリに内容更新のメッセージを送信
+                const popupTab = existingWindow.tabs[0];
+                if (popupTab) {
+                    chrome.tabs.sendMessage(popupTab.id, { action: 'updateContent' });
+                }
+                return; // 処理完了
+
+            } catch (error) {
+                // ウィンドウが存在しなかった (ユーザーが閉じた) 場合
+                console.log(`ポップアップ (ID: ${popupWindowId}) は既に閉じられていました。新しいウィンドウを作成します。:`, error);
+                // 古いIDを削除
+                await chrome.storage.local.remove('popupWindowId');
+            }
+        }
+
+        // 4. 既存のウィンドウがなければ、新しいウィンドウを作成
+        const newWindow = await chrome.windows.create({
+            url: chrome.runtime.getURL('popup.html'),
             type: 'popup',
-            width: 500, // ポップアップの幅
-            height: 380, // ポップアップの高さ
+            width: 400,
+            height: 300,
         });
+
+        // 5. 新しいウィンドウのIDを保存
+        await chrome.storage.local.set({ popupWindowId: newWindow.id });
     }
 });

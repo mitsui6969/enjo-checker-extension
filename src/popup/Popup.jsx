@@ -10,27 +10,46 @@ function Popup() {
     const [aiComment, setAiComment] = useState('no data');
     const [isPostOk, setIsPostOk] = useState(false);
 
-    useEffect(() => {
-        // chrome.storageから保存されたAPI結果を取得
+    // storageからデータを取得してstateを更新する関数
+    const fetchDataFromStorage = () => {
         chrome.storage.local.get(['apiResult'], (result) => {
             const storedResult = result.apiResult;
-
             if (!storedResult) {
                 setAiComment('まだ解析結果がありません。');
                 return;
             }
-
             if (storedResult.success) {
                 const data = storedResult.data;
                 setRiskLevel(data.risk_level);
                 setAiComment(data.ai_comment);
-                setIsPostOk(data.risk_level === 'low');
+                // ... 他のstate更新
             } else {
-                setRiskLevel('high'); // エラー時は高リスクとして表示
+                setRiskLevel('high');
                 setAiComment(`エラー: 解析に失敗しました。\n${storedResult.error}`);
             }
         });
-    }, []); // 最初の一回だけ実行
+    };
+
+    useEffect(() => {
+        // 1. ポップアップが開かれた時に一度だけデータを取得
+        fetchDataFromStorage();
+
+        // 2. background.jsからのメッセージを監視するリスナー
+        const messageListener = (message) => {
+            // 'updateContent' メッセージを受け取ったら、再度storageからデータを取得
+            if (message.action === 'updateContent') {
+                console.log('内容更新のメッセージを受信しました。');
+                fetchDataFromStorage();
+            }
+        };
+
+        chrome.runtime.onMessage.addListener(messageListener);
+
+        // コンポーネントが閉じられるときにリスナーを解除
+        return () => {
+            chrome.runtime.onMessage.removeListener(messageListener);
+        };
+    }, []); 
 
     const riskInfoMap = {
         high: { emoji: '🥵', text: '高', isPostOk: false },
