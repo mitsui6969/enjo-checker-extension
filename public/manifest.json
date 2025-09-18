@@ -18,7 +18,8 @@
             "https://twitter.com/*",
             "https://x.com/*"
         ],
-        "js": ["content.js"]
+        "js": ["content.js"],
+        "css": ["content.css"] 
         }
     ],
 

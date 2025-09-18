@@ -68,6 +68,7 @@ function Popup() {
         chrome.runtime.sendMessage({
             action: 'doPostButton' // background.js への指示
         });
+        setIsPostOk(true);
     }
 
     return (
