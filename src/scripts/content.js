@@ -187,7 +187,7 @@ function restoreOriginalButton(button) {
     button.style.cssText = '';
     button.innerHTML = button.dataset.originalHTML || '投稿';
     button.removeAttribute('data-enjo-hijacked');
-    button.removeAttribute('data-original-h-t-m-l');
+    button.removeAttribute('data-original-html');
     button.classList.remove('enjo-hijacked-button'); 
     
     if (button.enjoClickListener) {

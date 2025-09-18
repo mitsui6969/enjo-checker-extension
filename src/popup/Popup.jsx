@@ -22,9 +22,10 @@ function Popup() {
                 const data = storedResult.data;
                 setRiskLevel(data.risk_level);
                 setAiComment(data.ai_comment);
+                setIsPostOk(riskInfoMap[data.risk_level]?.isPostOk ?? false);
             } else {
-                setRiskLevel('high');
-                setAiComment(`エラー: 解析に失敗しました。\n${storedResult.error}`);
+                setAiComment('エラー: 解析に失敗しました。');
+                console.error('API Error:', storedResult.error);
             }
         });
     };
