@@ -64,7 +64,10 @@ function Popup() {
     }
 
     const handleDoPostButtonClick = () => {
-        setIsPostOk(true);
+        console.log('元の投稿ボタンに戻すメッセージを送信します。');
+        chrome.runtime.sendMessage({
+            action: 'doPostButton' // background.js への指示
+        });
     }
 
     return (

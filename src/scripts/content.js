@@ -8,6 +8,9 @@ const SELECTORS = {
     POST_TEXTS: ['投稿', 'Post', 'ポスト']
 };
 
+// 乗っ取り判別
+let isHijackingEnabled = true;
+
 function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -60,6 +63,11 @@ function showTemporaryMessage(element, htmlContent, duration = 3000) {
 }
 
 function findAndHijackButtons() {
+    if (!isHijackingEnabled) {
+        console.log('乗っ取りが無効化されているため、処理をスキップします。');
+        return;
+    }
+
     const allButtons = document.querySelectorAll('button, div[role="button"]');
     allButtons.forEach(button => {
         if (button.dataset.enjoHijacked) {
@@ -83,6 +91,9 @@ function findAndHijackButtons() {
 
         if (isPostButton || isReplyButton) {
             try {
+                // textContentを変更する前に、元のテキストをdata属性に保存する
+                button.dataset.originalText = button.textContent;
+
                 button.textContent = '🔥 炎上チェック';
                 button.dataset.enjoHijacked = 'true';
                 button.style.pointerEvents = 'auto';
@@ -165,6 +176,33 @@ function initialize() {
         }
     });
 }
+
+// ▼▼▼ background.jsからのメッセージを受け取るリスナーを追加 ▼▼▼
+chrome.runtime.onMessage.addListener((message, sendResponse) => {
+    if (message.action === 'doPostButton') {
+        console.log('backgroundから doPostButton メッセージを受信しました。');
+        const hijackedButton = document.querySelector('[data-enjo-hijacked="true"]');
+        
+        if (hijackedButton) {
+            isHijackingEnabled = false;
+            console.log('乗っ取りを無効化しました。');
+
+            // 乗っ取ったボタンを元の状態に戻す
+            hijackedButton.textContent = hijackedButton.dataset.originalText || '投稿';
+            hijackedButton.removeAttribute('data-enjo-hijacked');
+            hijackedButton.removeAttribute('data-original-text');
+            hijackedButton.style.cssText = '';
+            
+            // 乗っ取ったクリックイベントを削除
+            if (hijackedButton.enjoClickListener) {
+                hijackedButton.removeEventListener('click', hijackedButton.enjoClickListener, { capture: true });
+                delete hijackedButton.enjoClickListener;
+            }
+        }
+        sendResponse({ status: 'completed' });
+    }
+    return true;
+});
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialize);
