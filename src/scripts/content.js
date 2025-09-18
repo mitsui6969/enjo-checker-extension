@@ -65,6 +65,8 @@ function getPostText() {
 }
 
 function updateAllButtonStates() {
+    if (!isHijackingEnabled) return;
+
     const postContent = getPostText();
     const hasText = postContent.trim().length > 0;
     const allHijackedButtons = document.querySelectorAll('[data-enjo-hijacked="true"]');
@@ -177,26 +179,50 @@ function initialize() {
     });
 }
 
+/**
+ * ハイジャックされたボタンを元の状態に戻す関数
+ * @param {HTMLElement} button - 元に戻すボタン要素
+ */
+function restoreOriginalButton(button) {
+    button.style.cssText = '';
+    button.innerHTML = button.dataset.originalHTML || '投稿';
+    button.removeAttribute('data-enjo-hijacked');
+    button.removeAttribute('data-original-h-t-m-l');
+    button.classList.remove('enjo-hijacked-button'); 
+    
+    if (button.enjoClickListener) {
+        button.removeEventListener('click', button.enjoClickListener, { capture: true });
+        delete button.enjoClickListener;
+    }
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    // 【ボタン解除】のリクエスト
     if (message.action === 'doPostButton') {
+        console.log('doPostButtonを受信: ボタンを解除します。');
+        // ハイジャック機能をOFFにする
+        isHijackingEnabled = false;
+        
         const hijackedButtons = document.querySelectorAll('[data-enjo-hijacked="true"]');
         hijackedButtons.forEach(button => {
-            // スタイルをリセット
-            button.style.cssText = '';
-            button.innerHTML = button.dataset.originalHTML || '投稿';
-            button.removeAttribute('data-enjo-hijacked');
-            button.removeAttribute('data-original-h-t-m-l');
-            button.classList.remove('enjo-hijacked-button'); 
-            
-            if (button.enjoClickListener) {
-                button.removeEventListener('click', button.enjoClickListener, { capture: true });
-                delete button.enjoClickListener;
-            }
+            restoreOriginalButton(button);
         });
-        isHijackingEnabled = false;
-        sendResponse({ status: 'completed' });
+        
+        sendResponse({ status: 'unhijacked' });
+        return true;
     }
-    return true;
+    
+    // 【ボタン再乗っ取り】のリクエスト
+    if (message.action === 'returnEnjoButton') {
+        console.log('returnEnjoButtonを受信: ボタンを再乗っ取りします。');
+        // ハイジャック機能をONにする
+        isHijackingEnabled = true;
+        // 即座にボタン検索と乗っ取りを実行
+        findAndHijackButtons();
+        
+        sendResponse({ status: 're-hijacked' });
+        return true;
+    }
 });
 
 if (document.readyState === 'loading') {

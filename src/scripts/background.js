@@ -25,7 +25,7 @@ chrome.runtime.onMessage.addListener((message) => {
         return true; 
     
     // ポップアップからのボタン復元リクエストの場合
-    } else if (message.action === 'doPostButton') {
+    } else if (message.action === 'doPostButton' || message.action === 'returnEnjoButton') {
         console.log('ポップアップから doPostButton メッセージを受信。content.jsに転送します。');
         
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

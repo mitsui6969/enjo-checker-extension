@@ -22,7 +22,6 @@ function Popup() {
                 const data = storedResult.data;
                 setRiskLevel(data.risk_level);
                 setAiComment(data.ai_comment);
-                // ... 他のstate更新
             } else {
                 setRiskLevel('high');
                 setAiComment(`エラー: 解析に失敗しました。\n${storedResult.error}`);
@@ -59,7 +58,11 @@ function Popup() {
 
     const { emoji, text: riskText } = riskInfoMap[riskLevel] || {};
 
-    const handleReturnButtonClick = () => {
+    const handleReturnEnjoButtonClick = () => {
+        console.log('元の投稿ボタンに戻すメッセージを送信します。');
+        chrome.runtime.sendMessage({
+            action: 'returnEnjoButton' // background.js への指示
+        });
         setIsPostOk(false);
     }
 
@@ -84,7 +87,7 @@ function Popup() {
 
             <div className="actions">
                 { isPostOk ? (
-                        <button className="secondary" onClick={handleReturnButtonClick}>炎上チェックに戻る🔥</button>
+                        <button className="secondary" onClick={handleReturnEnjoButtonClick}>炎上チェックに戻る🔥</button>
                     ):(
                         <button className='do-post' onClick={handleDoPostButtonClick}>このままポストする</button>
                     )
