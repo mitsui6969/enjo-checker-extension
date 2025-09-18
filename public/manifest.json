@@ -16,9 +16,24 @@
         {
         "matches": [
             "https://twitter.com/*",
-            "https://x.com/home"
+            "https://x.com/*"
         ],
         "js": ["content.js"]
+        }
+    ],
+
+    "permissions": [
+        "storage",
+        "windows" 
+    ],
+
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "popup.html",
+                "assets/*"
+            ],
+            "matches": [ "<all_urls>" ]
         }
     ],
 
@@ -27,7 +42,8 @@
     },
 
     "host_permissions": [
-        "https://hack-u-backend.onrender.com/check/post"
+        "https://hack-u-backend.onrender.com/*",
+        "http://127.0.0.1:8000/*"
     ]
 
 }

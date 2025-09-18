@@ -3,10 +3,49 @@
 const SELECTORS = {
     POST_TEXTAREA: 'div[role="textbox"][data-testid="tweetTextarea_0"]',
     REPLY_TEXTAREA: 'div[role="textbox"][data-testid*="tweetTextarea_"]:not([data-testid="tweetTextarea_0"])',
-    TWEET_BUTTON_TEST_IDS: ['tweetButtonInline', 'tweetButton', 'postButton'],
+    TWEET_BUTTON_TEST_IDS: ['tweetButtonInline', 'tweetButton', 'postButton', 'tweetButtonThread'],
     REPLY_BUTTON_TEST_ID: 'replyButton',
-    POST_TEXTS: ['投稿', 'Post', 'ポスト']
+    POST_TEXTS: ['投稿', 'Post', 'ポスト', 'すべてポスト']
 };
+
+// 活性時のスタイル
+const activeStyles = {
+    background: 'linear-gradient(135deg, #FF4500, #FF8C00)',
+    color: 'white',
+    fontWeight: 'bold',
+    border: 'none',
+    boxShadow: '0 4px 10px rgba(255, 69, 0, 0.4)',
+    opacity: '1',
+    pointerEvents: 'auto',
+    cursor: 'pointer',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    transition: 'opacity 0.3s ease, background-color 0.3s ease'
+};
+
+// 非活性時のスタイル
+const disabledStyles = {
+    background: 'linear-gradient(135deg, #999, #777)',
+    color: 'white',
+    fontWeight: 'bold',
+    opacity: '0.6',
+    cursor: 'not-allowed',
+    boxShadow: 'none',
+    border: 'none',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
+};
+
+// ヘルパー関数：スタイルを要素に適用する
+function applyStyles(element, styles) {
+    for (const property in styles) {
+        element.style[property] = styles[property];
+    }
+}
+
+let isHijackingEnabled = true;
 
 function debounce(func, wait) {
     let timeout;
@@ -19,52 +58,37 @@ function debounce(func, wait) {
 
 function getPostText() {
     const postTextarea = document.querySelector(SELECTORS.POST_TEXTAREA);
-    if (postTextarea) {
-        return postTextarea.textContent;
-    }
-
+    if (postTextarea) { return postTextarea.textContent; }
     const replyTextarea = document.querySelector(SELECTORS.REPLY_TEXTAREA);
-    if (replyTextarea) {
-        return replyTextarea.textContent;
-    }
-
+    if (replyTextarea) { return replyTextarea.textContent; }
     return '';
 }
 
-// テキストの有無に基づいて、すべての「炎上チェック」ボタンの活性/非活性状態を更新
 function updateAllButtonStates() {
+    if (!isHijackingEnabled) return;
+
     const postContent = getPostText();
     const hasText = postContent.trim().length > 0;
-
     const allHijackedButtons = document.querySelectorAll('[data-enjo-hijacked="true"]');
+    
     allHijackedButtons.forEach(button => {
-        // テキストがなければ disabled を true (非活性) に、あれば false (活性) に設定
         button.disabled = !hasText;
+        if (hasText) {
+            // 活性時のスタイルをJSで直接上書き
+            applyStyles(button, activeStyles);
+        } else {
+            // 非活性時のスタイルをJSで直接上書き
+            applyStyles(button, disabledStyles);
+        }
     });
 }
 
-function showTemporaryMessage(element, htmlContent, duration = 3000) {
-    // 既存のタイマーがあればクリアする
-    if (element.enjoTimeoutId) {
-        clearTimeout(element.enjoTimeoutId);
-    }
-    element.innerHTML = htmlContent;
-    element.style.display = 'block';
-
-    // 指定時間後にメッセージを非表示にする
-    element.enjoTimeoutId = setTimeout(() => {
-        element.style.display = 'none';
-        element.innerHTML = '';
-        delete element.enjoTimeoutId;
-    }, duration);
-}
-
 function findAndHijackButtons() {
+    if (!isHijackingEnabled) { return; }
+
     const allButtons = document.querySelectorAll('button, div[role="button"]');
     allButtons.forEach(button => {
-        if (button.dataset.enjoHijacked) {
-            return;
-        }
+        if (button.dataset.enjoHijacked) { return; }
 
         const text = button.textContent || button.innerText;
         const testId = button.getAttribute('data-testid');
@@ -83,135 +107,126 @@ function findAndHijackButtons() {
 
         if (isPostButton || isReplyButton) {
             try {
+                button.dataset.originalHTML = button.innerHTML;
                 button.textContent = '🔥 炎上チェック';
                 button.dataset.enjoHijacked = 'true';
-                button.style.pointerEvents = 'auto';
+                
+                // classList.addはマーカーとして残し、実際のスタイルはJSで設定
+                button.classList.add('enjo-hijacked-button');
+                // 初期状態（非活性）のスタイルを適用
+                applyStyles(button, disabledStyles);
 
-                // 既存の結果表示領域を探し、なければ作成
-                let resultDiv = button.parentNode.querySelector('.enjo-result');
-                if (!resultDiv) {
-                    resultDiv = document.createElement('div');
-                    resultDiv.classList.add('enjo-result');
-                    resultDiv.style.display = 'none'; 
-                    button.parentNode.insertBefore(resultDiv, button.nextSibling);
-                }
-
-                // メッセージをボタンの上に表示するために親要素を基準にする
-                button.parentNode.style.position = 'relative';
-
-                // クリック時の動作を定義
                 const newClickListener = (event) => {
                     event.stopPropagation();
                     event.preventDefault();
-
-                    const postContent = getPostText();
+                    isHijackingEnabled = true;
                     
-                    // ボタンが活性状態の場合のみAPIを叩く ( safeguard )
+                    const postContent = getPostText();
                     if (postContent) {
-                        resultDiv.style.display = 'none';
-
                         chrome.runtime.sendMessage({
                             action: 'sendAPIRequest',
                             text: postContent
-                        }, (response) => {
-                            if (response.success) {
-                                console.log('レスポンス', response.data);
-                            } else {
-                                console.error('API呼び出し中にエラーが発生しました:', response.error);
-                                const errorMessage = '<p class="enjo-error">炎上チェックに失敗しました</p>';
-                                showTemporaryMessage(resultDiv, errorMessage, 1000);
-                            }
                         });
                     }
-
-                    console.log('炎上チェックボタンがクリックされました:', postContent)
+                    console.log('投稿ボタンがクリックされました。APIリクエストを送信します。:', postContent);
                 };
                 
-                // 多重登録を防ぐために古いリスナーを削除
                 if (button.enjoClickListener) {
                     button.removeEventListener('click', button.enjoClickListener, { capture: true });
                 }
                 button.addEventListener('click', newClickListener, { capture: true });
                 button.enjoClickListener = newClickListener;
 
-
-                const textarea = document.querySelector(SELECTORS.POST_TEXTAREA) || document.querySelector(SELECTORS.REPLY_TEXTAREA);
-                if (textarea && !textarea.dataset.enjoEnterHijacked) {
-                    textarea.dataset.enjoEnterHijacked = 'true';
-                }
-
             } catch (error) {
-                console.error('ボタン乗っ取り中にエラーが発生:', error);
+                console.error('ボタンの書き換え中にエラーが発生:', error);
             }
         }
     });
-    // この関数が実行された時点で、一度全ボタンの状態を更新する
     updateAllButtonStates();
 }
 
 function initialize() {
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = `
+        .enjo-result {
+            position: absolute;
+            bottom: calc(100% + 5px);
+            left: 0;
+            z-index: 1000;
+            width: max-content;
+            white-space: nowrap;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #D5D5D5;
+            color: white;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    `;
+    document.head.appendChild(styleSheet);
+
     findAndHijackButtons();
     
     const debouncedFindAndHijack = debounce(findAndHijackButtons, 300);
     const observer = new MutationObserver(debouncedFindAndHijack);
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // テキスト入力を監視し、ボタンの状態を更新するリスナーを追加
     const debouncedUpdateButtons = debounce(updateAllButtonStates, 200);
     document.body.addEventListener('input', (event) => {
-        // イベント発生元が投稿エリアか確認
         if (event.target.matches(SELECTORS.POST_TEXTAREA) || event.target.matches(SELECTORS.REPLY_TEXTAREA)) {
             debouncedUpdateButtons();
         }
     });
 }
 
+/**
+ * ハイジャックされたボタンを元の状態に戻す関数
+ * @param {HTMLElement} button - 元に戻すボタン要素
+ */
+function restoreOriginalButton(button) {
+    button.style.cssText = '';
+    button.innerHTML = button.dataset.originalHTML || '投稿';
+    button.removeAttribute('data-enjo-hijacked');
+    button.removeAttribute('data-original-html');
+    button.classList.remove('enjo-hijacked-button'); 
+    
+    if (button.enjoClickListener) {
+        button.removeEventListener('click', button.enjoClickListener, { capture: true });
+        delete button.enjoClickListener;
+    }
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    // 【ボタン解除】のリクエスト
+    if (message.action === 'doPostButton') {
+        console.log('doPostButtonを受信: ボタンを解除します。');
+        // ハイジャック機能をOFFにする
+        isHijackingEnabled = false;
+        
+        const hijackedButtons = document.querySelectorAll('[data-enjo-hijacked="true"]');
+        hijackedButtons.forEach(button => {
+            restoreOriginalButton(button);
+        });
+        
+        sendResponse({ status: 'unhijacked' });
+        return true;
+    }
+    
+    // 【ボタン再乗っ取り】のリクエスト
+    if (message.action === 'returnEnjoButton') {
+        console.log('returnEnjoButtonを受信: ボタンを再乗っ取りします。');
+        // ハイジャック機能をONにする
+        isHijackingEnabled = true;
+        // 即座にボタン検索と乗っ取りを実行
+        findAndHijackButtons();
+        
+        sendResponse({ status: 're-hijacked' });
+        return true;
+    }
+});
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialize);
 } else {
     initialize();
 }
-
-const style = document.createElement('style');
-style.textContent = `
-    [data-enjo-hijacked="true"] {
-        background: linear-gradient(135deg, #FF4500, #FF8C00) !important;
-        color: white !important;
-        font-weight: bold;
-        border: none !important;
-        box-shadow: 0 4px 10px rgba(255, 69, 0, 0.4);
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        cursor: pointer !important;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        transition: opacity 0.3s ease, background-color 0.3s ease; /* スムーズな変化のためのトランジション */
-    }
-
-    /* 非活性時のスタイル */
-    [data-enjo-hijacked="true"][disabled] {
-        background: linear-gradient(135deg, #999, #777) !important; /* グレー系の背景 */
-        opacity: 0.6 !important;
-        cursor: not-allowed !important; /* カーソルを禁止マークに */
-        box-shadow: none !important;
-    }
-
-    .enjo-result {
-        position: absolute;
-        bottom: calc(100% + 5px);
-        left: 0;
-        z-index: 1000;
-        
-        width: max-content;
-        white-space: nowrap;
-
-        padding: 10px;
-        border-radius: 8px;
-        background-color: #D5D5D5;
-        color: white;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-`;
-document.head.appendChild(style);
