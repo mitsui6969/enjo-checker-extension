@@ -15,7 +15,24 @@ chrome.runtime.onMessage.addListener((message) => {
         })
         .then(response => response.ok ? response.json() : response.text().then(text => Promise.reject(new Error(text))))
         .then(data => {
+            // APIの結果をストレージに保存
             chrome.storage.local.set({ apiResult: { success: true, data: data } });
+
+            // APIレスポンスのrisk_levelが'low'の場合、content.jsにメッセージを送信
+            if (data.risk_level === 'low') {
+                console.log('リスクレベルがlowです。content.jsにdoPostButtonメッセージを送信します。');
+                
+                // 現在アクティブなタブにメッセージを送信
+                chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                    if (tabs && tabs[0]) {
+                        chrome.tabs.sendMessage(tabs[0].id, { action: 'doPostButton' }, () => {
+                            if (chrome.runtime.lastError) {
+                                console.error('content.jsへのdoPostButtonメッセージ送信に失敗:', chrome.runtime.lastError.message);
+                            }
+                        });
+                    }
+                });
+            }
         })
         .catch(error => {
             chrome.storage.local.set({ apiResult: { success: false, error: error.message } });
