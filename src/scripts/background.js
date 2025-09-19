@@ -59,9 +59,9 @@ chrome.runtime.onMessage.addListener((message) => {
         // メッセージが非同期で処理されることを示す（レスポンスは返さない）
         return true; 
     
-        // ポップアップからのボタン復元リクエストの場合
+    // ポップアップからのボタン復元リクエストの場合
     } else if (message.action === 'doPostButton' || message.action === 'returnEnjoButton') {
-        console.log('ポップアップからメッセージを受信。content.jsに転送します。');
+        console.log('ポップアップから doPostButton メッセージを受信。content.jsに転送します。');
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs && tabs[0]) {
                 chrome.tabs.sendMessage(tabs[0].id, message, () => {
