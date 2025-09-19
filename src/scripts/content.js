@@ -167,17 +167,80 @@ function initialize() {
 
     findAndHijackButtons();
     
+    // --- 1. 新しいボタンの出現を監視する汎用オブザーバー ---
     const debouncedFindAndHijack = debounce(findAndHijackButtons, 300);
-    const observer = new MutationObserver(debouncedFindAndHijack);
-    observer.observe(document.body, { childList: true, subtree: true });
+    const generalObserver = new MutationObserver(debouncedFindAndHijack);
+    generalObserver.observe(document.body, { childList: true, subtree: true });
 
-    const debouncedUpdateButtons = debounce(updateAllButtonStates, 200);
+    // --- 2. テキスト再編集時の再乗っ取り ---
+    const handleTextInput = () => {
+        if (!isHijackingEnabled) {
+            console.log('テキストが再編集されました。ボタンの乗っ取りを再開します。');
+            isHijackingEnabled = true;
+            findAndHijackButtons();
+        }
+        updateAllButtonStates();
+    };
+    const debouncedHandleTextInput = debounce(handleTextInput, 200);
     document.body.addEventListener('input', (event) => {
         if (event.target.matches(SELECTORS.POST_TEXTAREA) || event.target.matches(SELECTORS.REPLY_TEXTAREA)) {
-            debouncedUpdateButtons();
+            debouncedHandleTextInput();
         }
     });
+
+    // --- 3. 投稿完了を常時監視し、再乗っ取りする新しいオブザーバー ---
+    const startPostCompletionObserver = () => {
+        const TOAST_SELECTOR = '[data-testid="toast"]';
+        const TOAST_TEXTS = ['投稿しました', 'Your Post was sent'];
+
+        const observer = new MutationObserver((mutations) => {
+            let postCompleted = false;
+
+            for (const mutation of mutations) {
+                // 条件1: 「投稿しました」トーストの出現
+                for (const node of mutation.addedNodes) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const toast = node.querySelector(TOAST_SELECTOR) || (node.matches && node.matches(TOAST_SELECTOR));
+                        if (toast && TOAST_TEXTS.some(text => toast.textContent.includes(text))) {
+                            postCompleted = true;
+                            break;
+                        }
+                    }
+                }
+                if (postCompleted) break;
+
+                // 条件2: メインの投稿テキストエリアの消失
+                for (const node of mutation.removedNodes) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.querySelector(SELECTORS.POST_TEXTAREA) || (node.matches && node.matches(SELECTORS.POST_TEXTAREA))) {
+                            postCompleted = true;
+                            break;
+                        }
+                    }
+                }
+                if (postCompleted) break;
+            }
+
+            if (postCompleted) {
+                console.log('投稿完了を検知しました。少し待ってからボタンを再乗っ取りします。');
+                // 新しいUIが表示されるのを少し待つ
+                setTimeout(() => {
+                    isHijackingEnabled = true;
+                    findAndHijackButtons();
+                }, 500); // 0.5秒待機
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    };
+
+    // 投稿完了の常時監視を開始
+    startPostCompletionObserver();
 }
+
 
 /**
  * ハイジャックされたボタンを元の状態に戻す関数
@@ -197,9 +260,10 @@ function restoreOriginalButton(button) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    // 【ボタン解除】のリクエスト
+    // 【乗っ取り解除のみ】のリクエスト
     if (message.action === 'doPostButton') {
-        console.log('doPostButtonを受信: ボタンを解除します。');
+        console.log('doPostButtonを受信: リスクがlowのため、投稿せずに乗っ取りを解除します。');
+        
         // ハイジャック機能をOFFにする
         isHijackingEnabled = false;
         
@@ -208,16 +272,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             restoreOriginalButton(button);
         });
         
-        sendResponse({ status: 'unhijacked' });
+        sendResponse({ status: 'unhijacked_without_posting' });
         return true;
     }
     
     // 【ボタン再乗っ取り】のリクエスト
     if (message.action === 'returnEnjoButton') {
         console.log('returnEnjoButtonを受信: ボタンを再乗っ取りします。');
-        // ハイジャック機能をONにする
         isHijackingEnabled = true;
-        // 即座にボタン検索と乗っ取りを実行
         findAndHijackButtons();
         
         sendResponse({ status: 're-hijacked' });
