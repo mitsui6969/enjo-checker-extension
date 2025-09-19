@@ -167,31 +167,78 @@ function initialize() {
 
     findAndHijackButtons();
     
+    // --- 1. 新しいボタンの出現を監視する汎用オブザーバー ---
     const debouncedFindAndHijack = debounce(findAndHijackButtons, 300);
-    const observer = new MutationObserver(debouncedFindAndHijack);
-    observer.observe(document.body, { childList: true, subtree: true });
+    const generalObserver = new MutationObserver(debouncedFindAndHijack);
+    generalObserver.observe(document.body, { childList: true, subtree: true });
 
-    // テキスト入力時の処理を一つの関数にまとめる
+    // --- 2. テキスト再編集時の再乗っ取り ---
     const handleTextInput = () => {
-        // もしハイジャックが無効化されていたら、有効に戻して再乗っ取りを実行
         if (!isHijackingEnabled) {
             console.log('テキストが再編集されました。ボタンの乗っ取りを再開します。');
             isHijackingEnabled = true;
-            findAndHijackButtons(); // ボタンを即座に再乗っ取り
+            findAndHijackButtons();
         }
-        // 既存の機能：ボタンの活性/非活性状態を更新
         updateAllButtonStates();
     };
-    
-    // パフォーマンスのためにdebounce（遅延実行）を設定
     const debouncedHandleTextInput = debounce(handleTextInput, 200);
-
-    // テキストエリアへの入力イベントを監視
     document.body.addEventListener('input', (event) => {
         if (event.target.matches(SELECTORS.POST_TEXTAREA) || event.target.matches(SELECTORS.REPLY_TEXTAREA)) {
             debouncedHandleTextInput();
         }
     });
+
+    // --- 3. 投稿完了を常時監視し、再乗っ取りする新しいオブザーバー ---
+    const startPostCompletionObserver = () => {
+        const TOAST_SELECTOR = '[data-testid="toast"]';
+        const TOAST_TEXTS = ['投稿しました', 'Your Post was sent'];
+
+        const observer = new MutationObserver((mutations) => {
+            let postCompleted = false;
+
+            for (const mutation of mutations) {
+                // 条件1: 「投稿しました」トーストの出現
+                for (const node of mutation.addedNodes) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const toast = node.querySelector(TOAST_SELECTOR) || (node.matches && node.matches(TOAST_SELECTOR));
+                        if (toast && TOAST_TEXTS.some(text => toast.textContent.includes(text))) {
+                            postCompleted = true;
+                            break;
+                        }
+                    }
+                }
+                if (postCompleted) break;
+
+                // 条件2: メインの投稿テキストエリアの消失
+                for (const node of mutation.removedNodes) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.querySelector(SELECTORS.POST_TEXTAREA) || (node.matches && node.matches(SELECTORS.POST_TEXTAREA))) {
+                            postCompleted = true;
+                            break;
+                        }
+                    }
+                }
+                if (postCompleted) break;
+            }
+
+            if (postCompleted) {
+                console.log('投稿完了を検知しました。少し待ってからボタンを再乗っ取りします。');
+                // 新しいUIが表示されるのを少し待つ
+                setTimeout(() => {
+                    isHijackingEnabled = true;
+                    findAndHijackButtons();
+                }, 500); // 0.5秒待機
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    };
+
+    // 投稿完了の常時監視を開始
+    startPostCompletionObserver();
 }
 
 
@@ -210,62 +257,6 @@ function restoreOriginalButton(button) {
         button.removeEventListener('click', button.enjoClickListener, { capture: true });
         delete button.enjoClickListener;
     }
-}
-
-/**
- * 投稿完了をDOMの変化から検知して、コールバックを実行する関数
- * @param {function} callback - 投稿完了後に実行する関数
- */
-function observeForPostCompletion(callback) {
-    const TOAST_SELECTOR = '[data-testid="toast"]';
-    const TOAST_TEXTS = ['投稿しました', 'Your Post was sent'];
-    const postTextarea = document.querySelector(SELECTORS.POST_TEXTAREA);
-
-    let timeoutId = null;
-
-    const observer = new MutationObserver((mutations, obs) => {
-        let postCompleted = false;
-
-        // 条件1: 投稿テキストエリアがDOMから消えたか
-        if (postTextarea && !document.body.contains(postTextarea)) {
-            console.log('投稿完了を検知: テキストエリアが削除されました。');
-            postCompleted = true;
-        }
-
-        // 条件2: 「投稿しました」のトーストが表示されたか
-        for (const mutation of mutations) {
-            if (mutation.type === 'childList') {
-                for (const node of mutation.addedNodes) {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        const toast = node.querySelector(TOAST_SELECTOR) || (node.matches && node.matches(TOAST_SELECTOR));
-                        if (toast && TOAST_TEXTS.some(text => toast.textContent.includes(text))) {
-                            console.log('投稿完了を検知: トースト通知が表示されました。');
-                            postCompleted = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (postCompleted) break;
-        }
-
-        if (postCompleted) {
-            clearTimeout(timeoutId); // タイムアウトをキャンセル
-            obs.disconnect();
-            callback();
-        }
-    });
-
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-    timeoutId = setTimeout(() => {
-        observer.disconnect();
-        console.log('タイムアウト: 投稿完了を検知できませんでしたが、念のため再乗っ取りを試みます。');
-        callback();
-    }, 10000); // 10秒でタイムアウト
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
