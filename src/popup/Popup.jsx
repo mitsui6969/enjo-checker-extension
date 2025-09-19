@@ -76,9 +76,9 @@ function Popup() {
     }
 
     return (
-        <div className={`container ${riskLevel}`}>
+        <div className="container">
             <div className="emoji">
-                <h1>{emoji}</h1>
+                <div>{emoji}</div>
             </div>
 
             <div className="text">
