@@ -39,7 +39,11 @@ chrome.runtime.onMessage.addListener((message) => {
                 // 現在アクティブなタブにメッセージを送信
                 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                     if (tabs && tabs[0]) {
-                        chrome.tabs.sendMessage(tabs[0].id, { action: 'doPostButton' });
+                        chrome.tabs.sendMessage(tabs[0].id, { action: 'doPostButton' }, () => {
+                            if (chrome.runtime.lastError) {
+                                console.error('content.jsへのdoPostButtonメッセージ送信に失敗:', chrome.runtime.lastError.message);
+                            }
+                        });
                     }
                 });
             }
@@ -60,7 +64,11 @@ chrome.runtime.onMessage.addListener((message) => {
         console.log('ポップアップからメッセージを受信。content.jsに転送します。');
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs && tabs[0]) {
-                chrome.tabs.sendMessage(tabs[0].id, message);
+                chrome.tabs.sendMessage(tabs[0].id, message, () => {
+                    if (chrome.runtime.lastError) {
+                        console.error('content.jsへのメッセージ送信に失敗:', chrome.runtime.lastError.message);
+                    }
+                });
             }
         });
         return true;
