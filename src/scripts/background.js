@@ -4,6 +4,17 @@
 const API_URL = 'http://127.0.0.1:8000/check/post';
 
 /* global chrome */
+
+// Helper function to open the popup window
+function openPopupWindow() {
+    chrome.windows.create({
+        url: 'popup.html',
+        type: 'popup',
+        width: 330,
+        height: 430,
+    });
+}
+
 chrome.runtime.onMessage.addListener((message) => {
     // content.jsからのAPIリクエストの場合
     if (message.action === 'sendAPIRequest') {
@@ -16,7 +27,10 @@ chrome.runtime.onMessage.addListener((message) => {
         .then(response => response.ok ? response.json() : response.text().then(text => Promise.reject(new Error(text))))
         .then(data => {
             // APIの結果をストレージに保存
-            chrome.storage.local.set({ apiResult: { success: true, data: data } });
+            chrome.storage.local.set({ apiResult: { success: true, data: data } }, () => {
+                // 保存が完了したらポップアップを開く
+                openPopupWindow();
+            });
 
             // APIレスポンスのrisk_levelが'low'の場合、content.jsにメッセージを送信
             if (data.risk_level === 'low') {
@@ -35,7 +49,11 @@ chrome.runtime.onMessage.addListener((message) => {
             }
         })
         .catch(error => {
-            chrome.storage.local.set({ apiResult: { success: false, error: error.message } });
+            // エラーをストレージに保存
+            chrome.storage.local.set({ apiResult: { success: false, error: error.message } }, () => {
+                // 保存が完了したらポップアップを開く
+                openPopupWindow();
+            });
         });
         
         // メッセージが非同期で処理されることを示す（レスポンスは返さない）
