@@ -87,12 +87,20 @@ function Popup() {
             </div>
 
             <div className="actions">
-                { isPostOk ? (
+                {riskLevel === 'high' || riskLevel === 'middle' ? (
+                    <>
+                        <button className='do-post' onClick={handleDoPostButtonClick}>このままポストする</button>
                         <button className="secondary" onClick={handleReturnEnjoButtonClick}>炎上チェックに戻る🔥</button>
-                    ):(
+                    </>
+                ) : riskLevel === 'low' ? (
+                    isPostOk ? (
+                        <button className="secondary" onClick={handleReturnEnjoButtonClick}>炎上チェックに戻る🔥</button>
+                    ) : (
                         <button className='do-post' onClick={handleDoPostButtonClick}>このままポストする</button>
                     )
-                }
+                ) : (
+                    <p>リスクレベルを判定中...</p>
+                )}
             </div>
 
         </div>
