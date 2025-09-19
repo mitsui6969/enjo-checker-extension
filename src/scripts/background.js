@@ -4,6 +4,17 @@
 const API_URL = 'http://127.0.0.1:8000/check/post';
 
 /* global chrome */
+
+// Helper function to open the popup window
+function openPopupWindow() {
+    chrome.windows.create({
+        url: 'popup.html',
+        type: 'popup',
+        width: 800,
+        height: 300,
+    });
+}
+
 chrome.runtime.onMessage.addListener((message) => {
     // content.jsからのAPIリクエストの場合
     if (message.action === 'sendAPIRequest') {
@@ -16,7 +27,10 @@ chrome.runtime.onMessage.addListener((message) => {
         .then(response => response.ok ? response.json() : response.text().then(text => Promise.reject(new Error(text))))
         .then(data => {
             // APIの結果をストレージに保存
-            chrome.storage.local.set({ apiResult: { success: true, data: data } });
+            chrome.storage.local.set({ apiResult: { success: true, data: data } }, () => {
+                // 保存が完了したらポップアップを開く
+                openPopupWindow();
+            });
 
             // APIレスポンスのrisk_levelが'low'の場合、content.jsにメッセージを送信
             if (data.risk_level === 'low') {
@@ -25,33 +39,28 @@ chrome.runtime.onMessage.addListener((message) => {
                 // 現在アクティブなタブにメッセージを送信
                 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                     if (tabs && tabs[0]) {
-                        chrome.tabs.sendMessage(tabs[0].id, { action: 'doPostButton' }, () => {
-                            if (chrome.runtime.lastError) {
-                                console.error('content.jsへのdoPostButtonメッセージ送信に失敗:', chrome.runtime.lastError.message);
-                            }
-                        });
+                        chrome.tabs.sendMessage(tabs[0].id, { action: 'doPostButton' });
                     }
                 });
             }
         })
         .catch(error => {
-            chrome.storage.local.set({ apiResult: { success: false, error: error.message } });
+            // エラーをストレージに保存
+            chrome.storage.local.set({ apiResult: { success: false, error: error.message } }, () => {
+                // 保存が完了したらポップアップを開く
+                openPopupWindow();
+            });
         });
         
         // メッセージが非同期で処理されることを示す（レスポンスは返さない）
         return true; 
     
-    // ポップアップからのボタン復元リクエストの場合
+        // ポップアップからのボタン復元リクエストの場合
     } else if (message.action === 'doPostButton' || message.action === 'returnEnjoButton') {
-        console.log('ポップアップから doPostButton メッセージを受信。content.jsに転送します。');
-        
+        console.log('ポップアップからメッセージを受信。content.jsに転送します。');
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs && tabs[0]) {
-                chrome.tabs.sendMessage(tabs[0].id, message, () => {
-                    if (chrome.runtime.lastError) {
-                        console.error('content.jsへのメッセージ送信に失敗:', chrome.runtime.lastError.message);
-                    }
-                });
+                chrome.tabs.sendMessage(tabs[0].id, message);
             }
         });
         return true;
