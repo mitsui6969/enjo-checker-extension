@@ -1,12 +1,12 @@
-import React from 'react';
+// import React, { useState, useEffect } from 'react';
+import './index.css';
+// import mockData from '../mocks/apiMock.json';
+import Popup from './Popup';
 
 function App() {
     return (
         <div>
-        <h1>炎上チェッカー🔥🔎</h1>
-        <p>
-            Twitter/Xの投稿ボタンが「炎上チェック」ボタンに変わります。
-        </p>
+            <Popup />
         </div>
     );
 }
