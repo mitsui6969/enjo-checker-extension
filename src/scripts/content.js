@@ -168,7 +168,11 @@ function initialize() {
     findAndHijackButtons();
     
     // --- 1. 新しいボタンの出現を監視する汎用オブザーバー ---
-    const debouncedFindAndHijack = debounce(findAndHijackButtons, 300);
+    const debouncedFindAndHijack = debounce(() => {
+        if (isHijackingEnabled) {
+            findAndHijackButtons();
+        }
+    }, 300);
     const generalObserver = new MutationObserver(debouncedFindAndHijack);
     generalObserver.observe(document.body, { childList: true, subtree: true });
 
@@ -225,8 +229,9 @@ function initialize() {
                 console.log('投稿完了を検知しました。少し待ってからボタンを再乗っ取りします。');
                 // 新しいUIが表示されるのを少し待つ
                 setTimeout(() => {
-                    isHijackingEnabled = true;
-                    findAndHijackButtons();
+                    if (isHijackingEnabled) {
+                        findAndHijackButtons();
+                    }
                 }, 500); // 0.5秒待機
             }
         });
