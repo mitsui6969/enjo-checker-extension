@@ -10,8 +10,8 @@ function openPopupWindow() {
     chrome.windows.create({
         url: 'popup.html',
         type: 'popup',
-        width: 800,
-        height: 300,
+        width: 330,
+        height: 430,
     });
 }
 
