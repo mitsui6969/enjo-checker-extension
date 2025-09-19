@@ -1,3 +1,8 @@
+html {
+    margin: 0;
+    padding: 0;
+}
+
 /* 基本的なリセット */
 body {
     margin: 0;
@@ -5,18 +10,14 @@ body {
         'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-}
-
-/* ポップアップウィンドウのサイズとスタイル */
-body {
-    background-color: #f7f7f7;
+    background-color: #fff;
 }
 
 /* コンテナのスタイル（少し横幅長めの正方形） */
 .container {
-    width: 230px; /* 横幅を少し長めに調整 */
-    height: 250px; /* 高さを調整 */
-    padding: 40px;
+    width: 270px;
+    height: auto;
+    margin: 30px;
     text-align: center;
     background-color: #fff; /* 背景色を統一 */
     gap: 8px; 
@@ -24,23 +25,22 @@ body {
 
 /* 絵文字のサイズ調整 */
 .emoji {
-    font-size: 30px; /* 絵文字のサイズ */
-    margin-top: -50px;
+    font-size: 60px; /* 絵文字のサイズ */
+    margin: 0;
+    padding: 0;
 }
-
-
 
 /* テキストスタイル */
 .text {
     margin-top: 20px;
-    font-size: 14px;
+    /* font-size: 14px; */
     padding: 10px;
     color: #333;
 }
 
 /* 炎上確率を強調 */
 .text h2 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
     color: #000000; /* 黒色で統一 */
     margin: -20px;
@@ -48,7 +48,7 @@ body {
 
 /* メッセージスタイル */
 .message {
-    margin-top: 30px;
+    margin: 30px 0;
     font-size: 16px;
     padding: 10px;
     border-radius: 5px;
@@ -56,9 +56,9 @@ body {
 }
 
 button {
-    margin-top: 20px;
+    margin: 10px 0;
     width: 100%;
-    padding: 10px;
+    padding: 10px 0;
     font-size: 14px;
     border: 1px solid;
     border-radius: 50px;      /* 丸みを強調 */
@@ -89,5 +89,5 @@ button.do-post:hover {
 /* ↓ ボタンとメッセージの間隔を詰める調整 */
 .text { padding-bottom: 0; }                 /* 下パディングを消す */
 .message { margin: 25px 0 0; padding: 0; }    /* p の下マージンを消し、上だけ少し */
-.actions { margin-top: 6px; }                /* ボタン側の余白も少しだけに */
+.actions { margin: 6px 0; }
 
